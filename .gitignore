@@ -1,0 +1,17 @@
+# зависимости
+node_modules
+**/node_modules
+
+# env
+**/.env
+
+# сборка
+dist
+build
+
+# системное
+.DS_Store
+
+# prisma generated
+**/generated/prisma
+**/.prisma
