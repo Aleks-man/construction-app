@@ -1,11 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 import { projectService } from "../services/project.service";
+import { parsePositiveInt, requireString } from "../utils/request";
 
 export const projectController = {
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name } = req.body as { name?: string };
-      const project = await projectService.createProject(name ?? "");
+      const name = requireString(req.body.name, "name");
+      const project = await projectService.createProject(name);
       res.status(201).json(project);
     } catch (error) {
       next(error);
@@ -21,9 +22,30 @@ export const projectController = {
     }
   },
 
+  async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const projectId = parsePositiveInt(req.params.id, "projectId");
+      const project = await projectService.getProject(projectId);
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const projectId = parsePositiveInt(req.params.id, "projectId");
+      const name = requireString(req.body.name, "name");
+      const project = await projectService.updateProject(projectId, name);
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const projectId = Number(req.params.id);
+      const projectId = parsePositiveInt(req.params.id, "projectId");
       const deletedProject = await projectService.deleteProject(projectId);
       res.json(deletedProject);
     } catch (error) {

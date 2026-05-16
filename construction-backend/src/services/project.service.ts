@@ -1,11 +1,12 @@
 import { projectRepository } from "../repositories/project.repository";
+import { badRequest, notFound } from "../errors/http-error";
 
 export const projectService = {
   createProject(name: string) {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      throw new Error("Project name is required");
+      throw badRequest("name is required");
     }
 
     return projectRepository.create(trimmedName);
@@ -15,16 +16,30 @@ export const projectService = {
     return projectRepository.findAll();
   },
 
-  async deleteProject(id: number) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error("Project id must be a positive integer");
-    }
-
+  async getProject(id: number) {
     const project = await projectRepository.findById(id);
 
     if (!project) {
-      throw new Error("Project not found");
+      throw notFound("Project not found");
     }
+
+    return project;
+  },
+
+  async updateProject(id: number, name: string) {
+    await this.getProject(id);
+
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      throw badRequest("name is required");
+    }
+
+    return projectRepository.updateById(id, trimmedName);
+  },
+
+  async deleteProject(id: number) {
+    await this.getProject(id);
 
     return projectRepository.deleteById(id);
   },
