@@ -78,10 +78,14 @@ http://localhost:5173
 ## Current Status
 
 - Project initialized
-- Backend setup completed (Express + Prisma)
+- Backend setup completed with Express, TypeScript and Prisma
 - PostgreSQL connected
-- Basic project CRUD implemented
-- Frontend scaffold created (React + Vite)
+- Core CRUD API implemented for users, projects, stages and tasks
+- Frontend scaffold created with React and Vite
+- CORS configured with allowed frontend origins
+- User passwords secured with bcrypt hashing
+- JWT authentication added with login and current user endpoints
+- API routes protected with authentication and role-based access contro
 
 ---
 
