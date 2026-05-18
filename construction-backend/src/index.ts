@@ -1,6 +1,8 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { authRouter } from "./routes/auth.routes";
 import { projectRouter } from "./routes/project.routes";
 import { projectUserRouter } from "./routes/project-user.routes";
 import { stageRouter } from "./routes/stage.routes";
@@ -35,6 +37,7 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/auth", authRouter);
 app.use("/projects", projectRouter);
 app.use("/project-users", projectUserRouter);
 app.use("/stages", stageRouter);

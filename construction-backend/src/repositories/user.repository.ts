@@ -7,6 +7,11 @@ const userSelect = {
   createdAt: true,
 };
 
+const userWithPasswordSelect = {
+  ...userSelect,
+  password: true,
+};
+
 export const userRepository = {
   create(data: { email: string; password: string; role: "ADMIN" | "MANAGER" | "WORKER" }) {
     return prisma.user.create({
@@ -26,6 +31,13 @@ export const userRepository = {
     return prisma.user.findUnique({
       where: { id },
       select: userSelect,
+    });
+  },
+
+  findByEmailWithPassword(email: string) {
+    return prisma.user.findUnique({
+      where: { email },
+      select: userWithPasswordSelect,
     });
   },
 
