@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { projectRouter } from "./routes/project.routes";
 import { projectUserRouter } from "./routes/project-user.routes";
@@ -8,18 +9,25 @@ import { userRouter } from "./routes/user.routes";
 
 const app = express();
 
-app.use((_req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+const allowedOrigins = (process.env.FRONTEND_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-  if (_req.method === "OPTIONS") {
-    res.sendStatus(204);
-    return;
-  }
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
 
-  next();
-});
+      callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
 
