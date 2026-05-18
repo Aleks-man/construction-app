@@ -1,19 +1,19 @@
+import bcrypt from "bcrypt";
 import { badRequest, notFound } from "../errors/http-error";
 import { userRepository } from "../repositories/user.repository";
 
 export const roles = ["ADMIN", "MANAGER", "WORKER"] as const;
 export type Role = (typeof roles)[number];
 
+const passwordSaltRounds = 10;
+
 export const userService = {
-  createUser(data: { email: string; password: string; role: Role }) {
+  async createUser(data: { email: string; password: string; role: Role }) {
     const email = normalizeEmail(data.email);
-    const password = data.password.trim();
+    const password = validatePassword(data.password);
+    const passwordHash = await bcrypt.hash(password, passwordSaltRounds);
 
-    if (password.length < 6) {
-      throw badRequest("password must be at least 6 characters");
-    }
-
-    return userRepository.create({ email, password, role: data.role });
+    return userRepository.create({ email, password: passwordHash, role: data.role });
   },
 
   getUsers() {
@@ -43,13 +43,8 @@ export const userService = {
     }
 
     if (data.password !== undefined) {
-      const password = data.password.trim();
-
-      if (password.length < 6) {
-        throw badRequest("password must be at least 6 characters");
-      }
-
-      updateData.password = password;
+      const password = validatePassword(data.password);
+      updateData.password = await bcrypt.hash(password, passwordSaltRounds);
     }
 
     if (data.role !== undefined) {
@@ -78,4 +73,14 @@ function normalizeEmail(email: string) {
   }
 
   return normalized;
+}
+
+function validatePassword(password: string) {
+  const trimmedPassword = password.trim();
+
+  if (trimmedPassword.length < 6) {
+    throw badRequest("password must be at least 6 characters");
+  }
+
+  return trimmedPassword;
 }
