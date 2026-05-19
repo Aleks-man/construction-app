@@ -1,10 +1,10 @@
 # Construction Management App
 
-Fullstack web application for construction project management.
+Full-stack web application for construction project management.
 
-This project is currently in the initial development stage.
+This project is currently in active development.
 
-Backend is set up with Express, Prisma and PostgreSQL. Frontend is initialized with React + Vite. Basic project structure is ready and development continues.
+The backend is built with Express, TypeScript, Prisma and PostgreSQL. The frontend is initialized with React and Vite. Core backend features are already implemented, and frontend development continues.
 
 ---
 
@@ -26,9 +26,11 @@ Backend:
 
 ## Project Structure
 
+```txt
 construction-project/
   construction-backend/
   construction-frontend/
+```
 
 ---
 
@@ -36,42 +38,120 @@ construction-project/
 
 ### Clone repository
 
+```bash
 git clone https://github.com/Aleks-man/construction-app.git
 cd construction-app
+```
 
 ---
 
 ## Backend
 
+```bash
 cd construction-backend
 npm install
+```
 
-Create .env file:
+Create local environment file:
 
-DATABASE_URL=postgresql://user:password@localhost:5432/db_name
+```bash
+copy .env.example .env
+```
+
+Update `.env` values if needed:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/construction_app"
+PORT=3000
+FRONTEND_ORIGINS="http://localhost:5173"
+JWT_SECRET="replace-with-a-long-random-secret"
+JWT_EXPIRES_IN="1d"
+SEED_ADMIN_EMAIL="admin@test.com"
+SEED_ADMIN_PASSWORD="123456"
+```
 
 Run database setup:
 
+```bash
 npx prisma generate
 npx prisma migrate dev
+```
+
+Create initial admin user:
+
+```bash
+npm run seed
+```
+
+Default development admin:
+
+```txt
+email: admin@test.com
+password: 123456
+```
 
 Start backend:
 
+```bash
 npm run dev
+```
 
 Backend runs on:
+
+```txt
 http://localhost:3000
+```
+
+On Windows PowerShell, if `npx prisma ...` is blocked by execution policy, use `npx.cmd prisma ...` instead.
+
+Health check:
+
+```http
+GET http://localhost:3000/health
+```
+
+Authentication:
+
+```http
+POST http://localhost:3000/auth/login
+```
+
+Request body:
+
+```json
+{
+  "email": "admin@test.com",
+  "password": "123456"
+}
+```
+
+Use the returned token for protected routes:
+
+```txt
+Authorization: Bearer <token>
+```
+
+Current user endpoint:
+
+```http
+GET http://localhost:3000/auth/me
+```
 
 ---
 
 ## Frontend
 
+```bash
 cd ../construction-frontend
 npm install
 npm run dev
+```
 
 Frontend runs on:
+
+```txt
 http://localhost:5173
+```
 
 ---
 
@@ -85,8 +165,8 @@ http://localhost:5173
 - CORS configured with allowed frontend origins
 - User passwords secured with bcrypt hashing
 - JWT authentication added with login and current user endpoints
-- API routes protected with authentication and role-based access contro
-- Database seed added for initial admin user setup
+- API routes protected with authentication and role-based access control
+- Prisma database seed configured for bootstrapping the initial admin user
 
 ---
 
