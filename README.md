@@ -24,6 +24,60 @@ Backend:
 
 ---
 
+## Features
+
+- User, project, stage and task management
+- PostgreSQL database integration with Prisma ORM
+- JWT-based authentication
+- Password hashing with bcrypt
+- Role-based access control for protected API routes
+- Initial admin user setup with Prisma seed
+- CORS configuration for frontend-backend communication
+- Layered backend structure with routes, controllers, services and repositories
+
+---
+
+## API Overview
+
+Auth:
+- `POST /auth/login`
+- `GET /auth/me`
+
+Users:
+- `GET /users`
+- `POST /users`
+- `GET /users/:id`
+- `PATCH /users/:id`
+- `DELETE /users/:id`
+
+Projects:
+- `GET /projects`
+- `POST /projects`
+- `GET /projects/:id`
+- `PATCH /projects/:id`
+- `DELETE /projects/:id`
+
+Project members:
+- `GET /project-users`
+- `POST /project-users`
+- `DELETE /project-users/:projectId/:userId`
+
+Stages:
+- `GET /stages`
+- `POST /stages`
+- `GET /stages/:id`
+- `PATCH /stages/:id`
+- `DELETE /stages/:id`
+
+Tasks:
+- `GET /tasks`
+- `POST /tasks`
+- `GET /tasks/:id`
+- `PATCH /tasks/:id`
+- `DELETE /tasks/:id`
+
+---
+
 ## Project Structure
 
 ```txt
@@ -157,19 +211,10 @@ http://localhost:5173
 
 ## Current Status
 
-- Project initialized
-- Backend setup completed with Express, TypeScript and Prisma
-- PostgreSQL connected
-- Core CRUD API implemented for users, projects, stages and tasks
-- Frontend scaffold created with React and Vite
-- CORS configured with allowed frontend origins
-- User passwords secured with bcrypt hashing
-- JWT authentication added with login and current user endpoints
-- API routes protected with authentication and role-based access control
-- Prisma database seed configured for bootstrapping the initial admin user
+Backend core functionality is implemented. Frontend development is in progress.
 
 ---
 
 ## Note
 
-This is an early-stage project. Features and structure will be extended during development.
+Features and structure will be extended during development.
