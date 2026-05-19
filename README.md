@@ -86,6 +86,7 @@ http://localhost:5173
 - User passwords secured with bcrypt hashing
 - JWT authentication added with login and current user endpoints
 - API routes protected with authentication and role-based access contro
+- Database seed added for initial admin user setup
 
 ---
 
