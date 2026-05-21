@@ -42,6 +42,8 @@ Backend:
 Frontend:
 - React and Vite project scaffold
 - TypeScript setup
+- Frontend authentication flow with login screen, token storage and protected routes
+- Frontend API clients for authentication and projects
 - Frontend application development in progress
 
 ---
