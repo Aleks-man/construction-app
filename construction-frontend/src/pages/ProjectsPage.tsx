@@ -1,7 +1,67 @@
+import { useEffect, useState, type ComponentProps } from "react";
+import { ApiError } from "../api/client";
+import { createProject, getProjects, type Project } from "../api/projects";
 import { useAuth } from "../auth/auth-context";
 
 export function ProjectsPage() {
   const { logout, user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectName, setProjectName] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const canCreateProject = user?.role === "ADMIN" || user?.role === "MANAGER";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProjects() {
+      try {
+        const projectsResponse = await getProjects();
+
+        if (isMounted) {
+          setProjects(projectsResponse);
+        }
+      } catch (projectsError) {
+        if (isMounted) {
+          setError(getProjectErrorMessage(projectsError));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadProjects();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleCreateProject: ComponentProps<"form">["onSubmit"] = async (event) => {
+    event.preventDefault();
+
+    const name = projectName.trim();
+
+    if (!name) {
+      return;
+    }
+
+    setError("");
+    setIsCreating(true);
+
+    try {
+      const createdProject = await createProject({ name });
+      setProjects((currentProjects) => [createdProject, ...currentProjects]);
+      setProjectName("");
+    } catch (createError) {
+      setError(getProjectErrorMessage(createError));
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <main className="app-shell">
@@ -19,13 +79,96 @@ export function ProjectsPage() {
         </div>
       </header>
 
-      <section className="empty-state">
-        <h2>Frontend auth flow is ready</h2>
-        <p className="muted">
-          The next step is connecting this page to the projects API and rendering real project
-          data.
-        </p>
+      {canCreateProject ? (
+        <section className="panel">
+          <div>
+            <h2>Create project</h2>
+            <p className="muted">Start a construction project and organize stages and tasks.</p>
+          </div>
+
+          <form className="inline-form" onSubmit={handleCreateProject}>
+            <label>
+              Project name
+              <input
+                onChange={(event) => setProjectName(event.target.value)}
+                placeholder="Residential complex A"
+                value={projectName}
+              />
+            </label>
+            <button disabled={isCreating || !projectName.trim()} type="submit">
+              {isCreating ? "Creating..." : "Create"}
+            </button>
+          </form>
+        </section>
+      ) : null}
+
+      {error ? <p className="form-error">{error}</p> : null}
+
+      <section className="projects-section">
+        <div className="section-heading">
+          <div>
+            <h2>Projects</h2>
+            <p className="muted">Track project teams, stages and active task progress.</p>
+          </div>
+          <span className="counter-badge">{projects.length}</span>
+        </div>
+
+        {isLoading ? <p className="muted">Loading projects...</p> : null}
+
+        {!isLoading && projects.length === 0 ? (
+          <div className="empty-state">
+            <h2>No projects yet</h2>
+            <p className="muted">
+              Create the first project to begin planning stages, tasks and team assignments.
+            </p>
+          </div>
+        ) : null}
+
+        {!isLoading && projects.length > 0 ? (
+          <div className="projects-grid">
+            {projects.map((project) => (
+              <article className="project-card" key={project.id}>
+                <div>
+                  <p className="eyebrow">Project #{project.id}</p>
+                  <h3>{project.name}</h3>
+                  <p className="muted">Created {formatDate(project.createdAt)}</p>
+                </div>
+
+                <dl className="project-stats">
+                  <div>
+                    <dt>Stages</dt>
+                    <dd>{project.stages.length}</dd>
+                  </div>
+                  <div>
+                    <dt>Tasks</dt>
+                    <dd>{countProjectTasks(project)}</dd>
+                  </div>
+                  <div>
+                    <dt>Members</dt>
+                    <dd>{project.users.length}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        ) : null}
       </section>
     </main>
   );
+}
+
+function countProjectTasks(project: Project) {
+  return project.stages.reduce((tasksCount, stage) => tasksCount + stage.tasks.length, 0);
+}
+
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+function getProjectErrorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : "Unable to load projects";
 }

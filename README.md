@@ -44,6 +44,7 @@ Frontend:
 - TypeScript setup
 - Frontend authentication flow with login screen, token storage and protected routes
 - Frontend API clients for authentication and projects
+- Projects page with project list, creation form, loading and error states
 - Frontend application development in progress
 
 ---
