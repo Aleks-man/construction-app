@@ -52,11 +52,16 @@ model Stage {
 }
 
 model Task {
-  id         Int        @id @default(autoincrement())
-  title      String
-  status     TaskStatus @default(NEW)
-  assigneeId Int?
-  stageId    Int
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus   @default(NEW)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  assigneeId  Int?
+  stageId     Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
 
   stage      Stage      @relation(fields: [stageId], references: [id])
   assignee   User?      @relation(fields: [assigneeId], references: [id])
@@ -72,4 +77,10 @@ enum TaskStatus {
   NEW
   IN_PROGRESS
   DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
 }

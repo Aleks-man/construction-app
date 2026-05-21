@@ -1,7 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-import { taskService, taskStatuses } from "../services/task.service";
+import { taskPriorities, taskService, taskStatuses } from "../services/task.service";
 import {
+  optionalDateTime,
   optionalEnum,
+  optionalNullableDateTime,
+  optionalNullableString,
   optionalString,
   parsePositiveInt,
   requireString,
@@ -12,7 +15,10 @@ export const taskController = {
     try {
       const task = await taskService.createTask({
         title: requireString(req.body.title, "title"),
+        description: optionalNullableString(req.body.description, "description"),
         status: optionalEnum(req.body.status, taskStatuses, "status"),
+        priority: optionalEnum(req.body.priority, taskPriorities, "priority"),
+        dueDate: optionalNullableDateTime(req.body.dueDate, "dueDate"),
         stageId: parsePositiveInt(String(req.body.stageId), "stageId"),
         assigneeId: parseOptionalNullableId(req.body.assigneeId, "assigneeId"),
       });
@@ -38,6 +44,18 @@ export const taskController = {
           typeof req.query.status === "string"
             ? optionalEnum(req.query.status, taskStatuses, "status")
             : undefined,
+        priority:
+          typeof req.query.priority === "string"
+            ? optionalEnum(req.query.priority, taskPriorities, "priority")
+            : undefined,
+        dueBefore:
+          typeof req.query.dueBefore === "string"
+            ? optionalDateTime(req.query.dueBefore, "dueBefore")
+            : undefined,
+        dueAfter:
+          typeof req.query.dueAfter === "string"
+            ? optionalDateTime(req.query.dueAfter, "dueAfter")
+            : undefined,
       });
 
       res.json(tasks);
@@ -61,7 +79,10 @@ export const taskController = {
       const taskId = parsePositiveInt(req.params.id, "taskId");
       const task = await taskService.updateTask(taskId, {
         title: optionalString(req.body.title, "title"),
+        description: optionalNullableString(req.body.description, "description"),
         status: optionalEnum(req.body.status, taskStatuses, "status"),
+        priority: optionalEnum(req.body.priority, taskPriorities, "priority"),
+        dueDate: optionalNullableDateTime(req.body.dueDate, "dueDate"),
         stageId:
           req.body.stageId === undefined
             ? undefined

@@ -15,7 +15,10 @@ const taskInclude = {
 export const taskRepository = {
   create(data: {
     title: string;
+    description?: string | null;
     status?: "NEW" | "IN_PROGRESS" | "DONE";
+    priority?: "LOW" | "MEDIUM" | "HIGH";
+    dueDate?: Date | null;
     stageId: number;
     assigneeId?: number | null;
   }) {
@@ -25,11 +28,30 @@ export const taskRepository = {
     });
   },
 
-  findAll(filters: { stageId?: number; assigneeId?: number; status?: "NEW" | "IN_PROGRESS" | "DONE" }) {
+  findAll(filters: {
+    stageId?: number;
+    assigneeId?: number;
+    status?: "NEW" | "IN_PROGRESS" | "DONE";
+    priority?: "LOW" | "MEDIUM" | "HIGH";
+    dueBefore?: Date;
+    dueAfter?: Date;
+  }) {
     return prisma.task.findMany({
-      where: filters,
+      where: {
+        stageId: filters.stageId,
+        assigneeId: filters.assigneeId,
+        status: filters.status,
+        priority: filters.priority,
+        dueDate:
+          filters.dueBefore || filters.dueAfter
+            ? {
+                lte: filters.dueBefore,
+                gte: filters.dueAfter,
+              }
+            : undefined,
+      },
       include: taskInclude,
-      orderBy: { id: "desc" },
+      orderBy: [{ dueDate: "asc" }, { id: "desc" }],
     });
   },
 
@@ -44,7 +66,10 @@ export const taskRepository = {
     id: number,
     data: Partial<{
       title: string;
+      description: string | null;
       status: "NEW" | "IN_PROGRESS" | "DONE";
+      priority: "LOW" | "MEDIUM" | "HIGH";
+      dueDate: Date | null;
       stageId: number;
       assigneeId: number | null;
     }>,

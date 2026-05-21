@@ -36,6 +36,18 @@ export function optionalString(value: unknown, fieldName: string) {
   return requireString(value, fieldName);
 }
 
+export function optionalNullableString(value: unknown, fieldName: string) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return requireString(value, fieldName);
+}
+
 export function requireEnum<T extends string>(
   value: unknown,
   allowedValues: readonly T[],
@@ -58,4 +70,38 @@ export function optionalEnum<T extends string>(
   }
 
   return requireEnum(value, allowedValues, fieldName);
+}
+
+export function parseDateTime(value: unknown, fieldName: string) {
+  if (typeof value !== "string") {
+    throw badRequest(`${fieldName} must be a valid date string`);
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    throw badRequest(`${fieldName} must be a valid date string`);
+  }
+
+  return date;
+}
+
+export function optionalDateTime(value: unknown, fieldName: string) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return parseDateTime(value, fieldName);
+}
+
+export function optionalNullableDateTime(value: unknown, fieldName: string) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return parseDateTime(value, fieldName);
 }

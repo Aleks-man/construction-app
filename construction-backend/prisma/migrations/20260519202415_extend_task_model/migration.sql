@@ -1,0 +1,9 @@
+-- CreateEnum
+CREATE TYPE "TaskPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
+
+-- AlterTable
+ALTER TABLE "Task" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "description" TEXT,
+ADD COLUMN     "dueDate" TIMESTAMP(3),
+ADD COLUMN     "priority" "TaskPriority" NOT NULL DEFAULT 'MEDIUM',
+ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
