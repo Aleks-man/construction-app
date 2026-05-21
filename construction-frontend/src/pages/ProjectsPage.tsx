@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentProps } from "react";
+import { Link } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { createProject, getProjects, type Project } from "../api/projects";
 import { useAuth } from "../auth/auth-context";
@@ -127,7 +128,7 @@ export function ProjectsPage() {
         {!isLoading && projects.length > 0 ? (
           <div className="projects-grid">
             {projects.map((project) => (
-              <article className="project-card" key={project.id}>
+              <Link className="project-card" key={project.id} to={`/projects/${project.id}`}>
                 <div>
                   <p className="eyebrow">Project #{project.id}</p>
                   <h3>{project.name}</h3>
@@ -148,7 +149,7 @@ export function ProjectsPage() {
                     <dd>{project.users.length}</dd>
                   </div>
                 </dl>
-              </article>
+              </Link>
             ))}
           </div>
         ) : null}
