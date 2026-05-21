@@ -1,3 +1,4 @@
+import "../types/express";
 import type { NextFunction, Request, Response } from "express";
 import { taskPriorities, taskService, taskStatuses } from "../services/task.service";
 import {
@@ -7,6 +8,7 @@ import {
   optionalNullableString,
   optionalString,
   parsePositiveInt,
+  requireEnum,
   requireString,
 } from "../utils/request";
 
@@ -89,6 +91,19 @@ export const taskController = {
             : parsePositiveInt(String(req.body.stageId), "stageId"),
         assigneeId: parseOptionalNullableId(req.body.assigneeId, "assigneeId"),
       });
+
+      res.json(task);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const taskId = parsePositiveInt(req.params.id, "taskId");
+      const status = requireEnum(req.body.status, taskStatuses, "status");
+
+      const task = await taskService.updateTaskStatus(taskId, status, req.user!);
 
       res.json(task);
     } catch (error) {

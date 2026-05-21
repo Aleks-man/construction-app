@@ -9,5 +9,10 @@ taskRouter.use(authMiddleware);
 taskRouter.post("/", requireRole("ADMIN", "MANAGER"), taskController.create);
 taskRouter.get("/", taskController.getAll);
 taskRouter.get("/:id", taskController.getById);
+taskRouter.patch(
+  "/:id/status",
+  requireRole("ADMIN", "MANAGER", "WORKER"),
+  taskController.updateStatus,
+);
 taskRouter.patch("/:id", requireRole("ADMIN", "MANAGER"), taskController.update);
 taskRouter.delete("/:id", requireRole("ADMIN", "MANAGER"), taskController.delete);

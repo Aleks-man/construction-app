@@ -1,8 +1,9 @@
-import { badRequest, notFound } from "../errors/http-error";
+import { badRequest, forbidden, notFound } from "../errors/http-error";
 import { projectUserRepository } from "../repositories/project-user.repository";
 import { stageRepository } from "../repositories/stage.repository";
 import { taskRepository } from "../repositories/task.repository";
 import { userRepository } from "../repositories/user.repository";
+import type { Role } from "./user.service";
 
 export const taskStatuses = ["NEW", "IN_PROGRESS", "DONE"] as const;
 export type TaskStatus = (typeof taskStatuses)[number];
@@ -122,6 +123,20 @@ export const taskService = {
     }
 
     return taskRepository.updateById(id, updateData);
+  },
+
+  async updateTaskStatus(
+    id: number,
+    status: TaskStatus,
+    currentUser: { id: number; role: Role },
+  ) {
+    const task = await this.getTask(id);
+
+    if (currentUser.role === "WORKER" && task.assigneeId !== currentUser.id) {
+      throw forbidden("Workers can update only their assigned tasks");
+    }
+
+    return taskRepository.updateById(id, { status });
   },
 
   async deleteTask(id: number) {

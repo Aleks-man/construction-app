@@ -26,14 +26,22 @@ Backend:
 
 ## Features
 
+Backend:
 - User, project, stage and task management
+- Extended task model with description, priority, due date and timestamps
+- Task filtering by status, priority, assignee, stage and due date range
 - PostgreSQL database integration with Prisma ORM
 - JWT-based authentication
 - Password hashing with bcrypt
 - Role-based access control for protected API routes
 - Initial admin user setup with Prisma seed
 - CORS configuration for frontend-backend communication
-- Layered backend structure with routes, controllers, services and repositories
+- Layered structure with routes, controllers, services and repositories
+
+Frontend:
+- React and Vite project scaffold
+- TypeScript setup
+- Frontend application development in progress
 
 ---
 
