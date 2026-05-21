@@ -30,6 +30,7 @@ Backend:
 - User, project, stage and task management
 - Extended task model with description, priority, due date and timestamps
 - Task filtering by status, priority, assignee, stage and due date range
+- Assigned workers can update the status of their own tasks
 - PostgreSQL database integration with Prisma ORM
 - JWT-based authentication
 - Password hashing with bcrypt
@@ -81,6 +82,7 @@ Tasks:
 - `GET /tasks`
 - `POST /tasks`
 - `GET /tasks/:id`
+- `PATCH /tasks/:id/status`
 - `PATCH /tasks/:id`
 - `DELETE /tasks/:id`
 
