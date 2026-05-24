@@ -5,7 +5,7 @@ import { createProject, getProjects, type Project } from "../api/projects";
 import { useAuth } from "../auth/auth-context";
 
 export function ProjectsPage() {
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectName, setProjectName] = useState("");
   const [error, setError] = useState("");
@@ -66,18 +66,10 @@ export function ProjectsPage() {
 
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Projects</p>
-          <h1>Construction workspace</h1>
-        </div>
-
-        <div className="user-menu">
-          <span>{user?.email}</span>
-          <button className="secondary-button" onClick={logout} type="button">
-            Sign out
-          </button>
-        </div>
+      <header className="page-heading">
+        <p className="eyebrow">Projects</p>
+        <h1>Construction workspace</h1>
+        <p className="muted">Plan projects, organize stages and track field work.</p>
       </header>
 
       {canCreateProject ? (

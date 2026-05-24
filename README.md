@@ -43,6 +43,7 @@ Frontend:
 - React and Vite project scaffold
 - TypeScript setup
 - Frontend authentication flow with login screen, token storage and protected routes
+- Shared dashboard layout with navigation, user role display and logout
 - Frontend API clients for authentication and projects
 - Projects page with project list, creation form, loading and error states
 - Project details page with stages, tasks and project members
