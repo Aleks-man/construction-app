@@ -48,6 +48,7 @@ Frontend:
 - Frontend authentication flow with login screen, token storage and protected routes
 - Shared dashboard layout with navigation, user role display and logout
 - Frontend API clients for authentication and projects
+- My Tasks page with role-aware task list, filters and quick status updates
 - Projects page with project list, creation form, loading and error states
 - Duplicate project name feedback on project creation
 - Project details page with stages, tasks and project members

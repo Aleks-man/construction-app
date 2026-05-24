@@ -1,7 +1,16 @@
 import { prisma } from "../prisma";
 
 const taskInclude = {
-  stage: true,
+  stage: {
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
   assignee: {
     select: {
       id: true,

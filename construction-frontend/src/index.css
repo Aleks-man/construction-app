@@ -528,7 +528,7 @@ select:focus {
 .task-summary-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   margin: 0 0 18px;
 }
 
@@ -811,6 +811,54 @@ select:focus {
   color: #a8071a;
 }
 
+.tasks-board {
+  display: grid;
+  gap: 16px;
+}
+
+.task-table {
+  display: grid;
+  gap: 12px;
+}
+
+.task-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.7fr) auto;
+  padding: 18px;
+}
+
+.task-row-title {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.task-row-title h2 {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.task-context {
+  display: grid;
+  gap: 4px;
+}
+
+.task-context .text-link {
+  margin-bottom: 0;
+}
+
+.task-context span {
+  color: #667085;
+  font-size: 13px;
+}
+
 .task-edit-form,
 .task-delete-confirm {
   display: grid;
@@ -913,6 +961,15 @@ select:focus {
 
   .task-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .task-row {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .task-row-title {
+    flex-direction: column;
   }
 
   .member-row,

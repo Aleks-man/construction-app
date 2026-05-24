@@ -14,6 +14,7 @@ export function AppLayout() {
 
         <nav className="sidebar-nav" aria-label="Main navigation">
           <NavLink to="/projects">Projects</NavLink>
+          <NavLink to="/my-tasks">My tasks</NavLink>
         </nav>
       </aside>
 
