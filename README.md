@@ -46,6 +46,7 @@ Frontend:
 - Frontend API clients for authentication and projects
 - Projects page with project list, creation form, loading and error states
 - Project details page with stages, tasks and project members
+- Stage creation flow on the project details page
 - Frontend application development in progress
 
 ---

@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { getProjectById, type Project, type ProjectTask } from "../api/projects";
+import { createStage } from "../api/stages";
+import { useAuth } from "../auth/auth-context";
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams();
+  const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
+  const [stageName, setStageName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingStage, setIsCreatingStage] = useState(false);
+  const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const parsedProjectId = useMemo(() => Number(projectId), [projectId]);
 
   useEffect(() => {
     let isMounted = true;
-    const parsedProjectId = Number(projectId);
 
     async function loadProject() {
       if (!Number.isInteger(parsedProjectId) || parsedProjectId <= 0) {
@@ -42,7 +48,37 @@ export function ProjectDetailsPage() {
     return () => {
       isMounted = false;
     };
-  }, [projectId]);
+  }, [parsedProjectId]);
+
+  const handleCreateStage: ComponentProps<"form">["onSubmit"] = async (event) => {
+    event.preventDefault();
+
+    if (!project) {
+      return;
+    }
+
+    const name = stageName.trim();
+
+    if (!name) {
+      return;
+    }
+
+    setError("");
+    setIsCreatingStage(true);
+
+    try {
+      const createdStage = await createStage({ name, projectId: project.id });
+      setProject({
+        ...project,
+        stages: [...project.stages, createdStage],
+      });
+      setStageName("");
+    } catch (stageError) {
+      setError(getProjectErrorMessage(stageError));
+    } finally {
+      setIsCreatingStage(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -118,6 +154,31 @@ export function ProjectDetailsPage() {
           <p className="muted">No members assigned yet.</p>
         )}
       </section>
+
+      {canCreateStage ? (
+        <section className="panel">
+          <div>
+            <h2>Create stage</h2>
+            <p className="muted">Add a project stage to organize construction work.</p>
+          </div>
+
+          <form className="inline-form" onSubmit={handleCreateStage}>
+            <label>
+              Stage name
+              <input
+                onChange={(event) => setStageName(event.target.value)}
+                placeholder="Foundation"
+                value={stageName}
+              />
+            </label>
+            <button disabled={isCreatingStage || !stageName.trim()} type="submit">
+              {isCreatingStage ? "Creating..." : "Create"}
+            </button>
+          </form>
+        </section>
+      ) : null}
+
+      {error ? <p className="form-error">{error}</p> : null}
 
       <section className="stages-layout">
         {project.stages.length > 0 ? (
