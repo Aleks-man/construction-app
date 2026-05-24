@@ -806,6 +806,24 @@ select:focus {
   padding: 7px 10px;
 }
 
+.task-actions .danger-action-button {
+  background: #fff1f0;
+  color: #a8071a;
+}
+
+.task-edit-form,
+.task-delete-confirm {
+  display: grid;
+  gap: 12px;
+}
+
+.task-delete-confirm {
+  background: #fffafa;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  padding: 12px;
+}
+
 .task-create-form {
   border-top: 1px solid #e7ebef;
   display: grid;

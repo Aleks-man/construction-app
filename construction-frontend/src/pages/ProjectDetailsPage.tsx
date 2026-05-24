@@ -12,11 +12,12 @@ import {
   type TaskStatus,
 } from "../api/projects";
 import { createStage, deleteStage, updateStage } from "../api/stages";
-import { createTask, updateTaskStatus } from "../api/tasks";
+import { createTask, deleteTask, updateTask, updateTaskStatus } from "../api/tasks";
 import { createUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { StageColumn } from "./StageColumn";
+import type { TaskEditDraft } from "./TaskCard";
 import {
   createEmptyTaskDraft,
   filterTasks,
@@ -54,12 +55,15 @@ export function ProjectDetailsPage() {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [creatingTaskStageId, setCreatingTaskStageId] = useState<number | null>(null);
+  const [savingTaskId, setSavingTaskId] = useState<number | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
   const canEditProject = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canDeleteProject = user?.role === "ADMIN";
   const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canManageStages = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const canManageTasks = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canManageMembers = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateUsers = user?.role === "ADMIN";
   const parsedProjectId = useMemo(() => Number(projectId), [projectId]);
@@ -320,6 +324,65 @@ export function ProjectDetailsPage() {
       setError(getProjectErrorMessage(taskError));
     } finally {
       setUpdatingTaskId(null);
+    }
+  }
+
+  async function handleUpdateTask(task: ProjectTask, draft: TaskEditDraft) {
+    if (!project) {
+      return false;
+    }
+
+    const title = draft.title.trim();
+
+    if (!title) {
+      return false;
+    }
+
+    setError("");
+    setSavingTaskId(task.id);
+
+    try {
+      const updatedTask = await updateTask(task.id, {
+        title,
+        description: draft.description.trim() || null,
+        priority: draft.priority,
+        dueDate: draft.dueDate ? new Date(draft.dueDate).toISOString() : null,
+        assigneeId: draft.assigneeId ? Number(draft.assigneeId) : null,
+      });
+      setProject(updateProjectTask(project, updatedTask));
+      return true;
+    } catch (taskUpdateError) {
+      setError(getProjectErrorMessage(taskUpdateError));
+      return false;
+    } finally {
+      setSavingTaskId(null);
+    }
+  }
+
+  async function handleDeleteTask(task: ProjectTask) {
+    if (!project) {
+      return false;
+    }
+
+    setError("");
+    setDeletingTaskId(task.id);
+
+    try {
+      await deleteTask(task.id);
+      setProject({
+        ...project,
+        stages: project.stages.map((stage) =>
+          stage.id === task.stageId
+            ? { ...stage, tasks: stage.tasks.filter((stageTask) => stageTask.id !== task.id) }
+            : stage,
+        ),
+      });
+      return true;
+    } catch (taskDeleteError) {
+      setError(getProjectErrorMessage(taskDeleteError));
+      return false;
+    } finally {
+      setDeletingTaskId(null);
     }
   }
 
@@ -792,19 +855,24 @@ export function ProjectDetailsPage() {
           project.stages.map((stage) => (
             <StageColumn
               canCreateTask={canCreateTask}
+              canManageTask={canManageTasks}
               canManageStage={canManageStages}
+              deletingTaskId={deletingTaskId}
               deletingStageId={deletingStageId}
               key={stage.id}
               members={project.users}
               onCreateTask={() => handleCreateTask(stage.id)}
+              onDeleteTask={handleDeleteTask}
               onDeleteStage={handleDeleteStage}
               onTaskDraftChange={(draft) => updateTaskDraft(stage.id, draft)}
+              onUpdateTask={handleUpdateTask}
               onUpdateTaskStatus={handleUpdateTaskStatus}
               onUpdateStageName={handleUpdateStageName}
               priorityFilter={taskPriorityFilter}
               stage={stage}
               statusFilter={taskStatusFilter}
               taskDraft={getTaskDraft(taskDrafts, stage.id)}
+              savingTaskId={savingTaskId}
               updatingStageId={updatingStageId}
               updatingTaskId={updatingTaskId}
               user={user}
@@ -830,6 +898,16 @@ type UserDraft = {
 
 function getProjectErrorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : "Unable to load project";
+}
+
+function updateProjectTask(project: Project, updatedTask: ProjectTask) {
+  return {
+    ...project,
+    stages: project.stages.map((stage) => ({
+      ...stage,
+      tasks: stage.tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
+    })),
+  };
 }
 
 function createEmptyUserDraft(): UserDraft {

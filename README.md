@@ -57,6 +57,7 @@ Frontend:
 - Stage creation flow on the project details page
 - Stage editing and deletion flows with confirmation
 - Task creation flow with priority, due date, description and assignee fields
+- Task editing and deletion flows for admins and managers
 - Task status update flow with role-aware actions
 - Project task overview with status and priority filters
 - Frontend application development in progress

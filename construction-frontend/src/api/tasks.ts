@@ -21,3 +21,25 @@ export function updateTaskStatus(taskId: number, status: TaskStatus) {
     body: { status },
   });
 }
+
+export function updateTask(
+  taskId: number,
+  data: {
+    title?: string;
+    description?: string | null;
+    priority?: TaskPriority;
+    dueDate?: string | null;
+    assigneeId?: number | null;
+  },
+) {
+  return apiRequest<ProjectTask>(`/tasks/${taskId}`, {
+    method: "PATCH",
+    body: data,
+  });
+}
+
+export function deleteTask(taskId: number) {
+  return apiRequest<ProjectTask>(`/tasks/${taskId}`, {
+    method: "DELETE",
+  });
+}

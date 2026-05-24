@@ -5,42 +5,52 @@ import {
   filterTasks,
   type TaskDraft,
 } from "./project-details-utils";
-import { TaskCard } from "./TaskCard";
+import { TaskCard, type TaskEditDraft } from "./TaskCard";
 import { TaskCreateForm } from "./TaskCreateForm";
 
 export function StageColumn({
   canCreateTask,
+  canManageTask,
   canManageStage,
+  deletingTaskId,
   deletingStageId,
   isCreatingTask,
+  onDeleteTask,
   onDeleteStage,
   members,
   onCreateTask,
   onTaskDraftChange,
+  onUpdateTask,
   onUpdateTaskStatus,
   onUpdateStageName,
   priorityFilter,
   stage,
   statusFilter,
   taskDraft,
+  savingTaskId,
   updatingStageId,
   updatingTaskId,
   user,
 }: {
   canCreateTask: boolean;
+  canManageTask: boolean;
   canManageStage: boolean;
+  deletingTaskId: number | null;
   deletingStageId: number | null;
   isCreatingTask: boolean;
   members: Project["users"];
   onCreateTask: () => void;
+  onDeleteTask: (task: ProjectTask) => Promise<boolean>;
   onDeleteStage: (stageId: number) => Promise<boolean>;
   onTaskDraftChange: (draft: Partial<TaskDraft>) => void;
+  onUpdateTask: (task: ProjectTask, draft: TaskEditDraft) => Promise<boolean>;
   onUpdateTaskStatus: (task: ProjectTask, status: TaskStatus) => void;
   onUpdateStageName: (stageId: number, name: string) => Promise<boolean>;
   priorityFilter: TaskPriority | "ALL";
   stage: ProjectStage;
   statusFilter: TaskStatus | "ALL";
   taskDraft: TaskDraft;
+  savingTaskId: number | null;
   updatingStageId: number | null;
   updatingTaskId: number | null;
   user: { id: number; role: string } | null;
@@ -168,9 +178,15 @@ export function StageColumn({
         <div className="tasks-list">
           {visibleStageTasks.map((task) => (
             <TaskCard
+              canManageTask={canManageTask}
               canUpdateStatus={canUpdateTaskStatus(task, user)}
+              isDeleting={deletingTaskId === task.id}
+              isSaving={savingTaskId === task.id}
               isUpdating={updatingTaskId === task.id}
               key={task.id}
+              members={members}
+              onDeleteTask={onDeleteTask}
+              onUpdateTask={onUpdateTask}
               onUpdateStatus={(status) => onUpdateTaskStatus(task, status)}
               task={task}
             />
