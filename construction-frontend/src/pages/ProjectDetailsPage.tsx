@@ -7,9 +7,10 @@ import {
   type ProjectStage,
   type ProjectTask,
   type TaskPriority,
+  type TaskStatus,
 } from "../api/projects";
 import { createStage } from "../api/stages";
-import { createTask } from "../api/tasks";
+import { createTask, updateTaskStatus } from "../api/tasks";
 import { useAuth } from "../auth/auth-context";
 
 export function ProjectDetailsPage() {
@@ -22,6 +23,7 @@ export function ProjectDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
   const [creatingTaskStageId, setCreatingTaskStageId] = useState<number | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
   const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
   const parsedProjectId = useMemo(() => Number(projectId), [projectId]);
@@ -142,6 +144,32 @@ export function ProjectDetailsPage() {
     }));
   }
 
+  async function handleUpdateTaskStatus(task: ProjectTask, status: TaskStatus) {
+    if (!project) {
+      return;
+    }
+
+    setError("");
+    setUpdatingTaskId(task.id);
+
+    try {
+      const updatedTask = await updateTaskStatus(task.id, status);
+      setProject({
+        ...project,
+        stages: project.stages.map((stage) => ({
+          ...stage,
+          tasks: stage.tasks.map((stageTask) =>
+            stageTask.id === updatedTask.id ? updatedTask : stageTask,
+          ),
+        })),
+      });
+    } catch (taskError) {
+      setError(getProjectErrorMessage(taskError));
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="app-shell">
@@ -254,7 +282,13 @@ export function ProjectDetailsPage() {
               {stage.tasks.length > 0 ? (
                 <div className="tasks-list">
                   {stage.tasks.map((task) => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard
+                      canUpdateStatus={canUpdateTaskStatus(task, user)}
+                      isUpdating={updatingTaskId === task.id}
+                      key={task.id}
+                      onUpdateStatus={(status) => handleUpdateTaskStatus(task, status)}
+                      task={task}
+                    />
                   ))}
                 </div>
               ) : (
@@ -377,7 +411,19 @@ function TaskCreateForm({
   );
 }
 
-function TaskCard({ task }: { task: ProjectTask }) {
+function TaskCard({
+  canUpdateStatus,
+  isUpdating,
+  onUpdateStatus,
+  task,
+}: {
+  canUpdateStatus: boolean;
+  isUpdating: boolean;
+  onUpdateStatus: (status: TaskStatus) => void;
+  task: ProjectTask;
+}) {
+  const nextStatuses = getNextStatuses(task.status);
+
   return (
     <article className="task-card">
       <div className="task-card-header">
@@ -391,6 +437,21 @@ function TaskCard({ task }: { task: ProjectTask }) {
         <span>{task.priority}</span>
         <span>{task.dueDate ? formatDate(task.dueDate) : "No due date"}</span>
       </div>
+
+      {canUpdateStatus && nextStatuses.length > 0 ? (
+        <div className="task-actions">
+          {nextStatuses.map((status) => (
+            <button
+              disabled={isUpdating}
+              key={status}
+              onClick={() => onUpdateStatus(status)}
+              type="button"
+            >
+              {getStatusActionLabel(status)}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -419,4 +480,40 @@ function createEmptyTaskDraft(): TaskDraft {
 
 function getTaskDraft(drafts: Record<number, TaskDraft>, stageId: number) {
   return drafts[stageId] ?? createEmptyTaskDraft();
+}
+
+function canUpdateTaskStatus(task: ProjectTask, user: { id: number; role: string } | null) {
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "ADMIN" || user.role === "MANAGER") {
+    return true;
+  }
+
+  return user.role === "WORKER" && task.assigneeId === user.id;
+}
+
+function getNextStatuses(status: TaskStatus): TaskStatus[] {
+  if (status === "NEW") {
+    return ["IN_PROGRESS", "DONE"];
+  }
+
+  if (status === "IN_PROGRESS") {
+    return ["DONE"];
+  }
+
+  return [];
+}
+
+function getStatusActionLabel(status: TaskStatus) {
+  if (status === "IN_PROGRESS") {
+    return "Start";
+  }
+
+  if (status === "DONE") {
+    return "Mark done";
+  }
+
+  return status;
 }

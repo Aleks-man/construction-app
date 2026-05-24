@@ -48,6 +48,7 @@ Frontend:
 - Project details page with stages, tasks and project members
 - Stage creation flow on the project details page
 - Task creation flow with priority, due date, description and assignee fields
+- Task status update flow with role-aware actions
 - Frontend application development in progress
 
 ---

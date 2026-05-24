@@ -1,5 +1,5 @@
 import { apiRequest } from "./client";
-import type { ProjectTask, TaskPriority } from "./projects";
+import type { ProjectTask, TaskPriority, TaskStatus } from "./projects";
 
 export function createTask(data: {
   title: string;
@@ -12,5 +12,12 @@ export function createTask(data: {
   return apiRequest<ProjectTask>("/tasks", {
     method: "POST",
     body: data,
+  });
+}
+
+export function updateTaskStatus(taskId: number, status: TaskStatus) {
+  return apiRequest<ProjectTask>(`/tasks/${taskId}/status`, {
+    method: "PATCH",
+    body: { status },
   });
 }
