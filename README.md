@@ -1,10 +1,8 @@
 # Construction Management App
 
-Full-stack web application for construction project management.
+Full-stack construction project management application for organizing projects, stages, teams and field tasks.
 
-This project is currently in active development.
-
-The backend is built with Express, TypeScript, Prisma and PostgreSQL. The frontend is initialized with React and Vite. Core backend features are already implemented, and frontend development continues.
+The project is built as a portfolio-grade full-stack application with role-based access, JWT authentication, PostgreSQL persistence and a React dashboard for day-to-day project work.
 
 ---
 
@@ -14,6 +12,7 @@ Frontend:
 - React
 - TypeScript
 - Vite
+- React Router
 
 Backend:
 - Node.js
@@ -21,47 +20,75 @@ Backend:
 - TypeScript
 - Prisma ORM
 - PostgreSQL
+- JWT
+- bcrypt
 
 ---
 
-## Features
+## Core Features
 
 Backend:
-- User, project, stage and task management
-- Unique project name validation with duplicate-name conflict responses
+- Layered Express architecture with routes, controllers, services and repositories
+- PostgreSQL database integration through Prisma ORM
+- JWT authentication with current-user endpoint
+- Password hashing with bcrypt
+- Role-based access control for protected API routes
+- User, project, project member, stage and task management
+- Unique project name validation with conflict responses
 - Transactional project deletion with related stages, tasks and members
 - Transactional stage deletion with related tasks
 - Extended task model with description, priority, due date and timestamps
 - Task filtering by status, priority, assignee, stage and due date range
-- Assigned workers can update the status of their own tasks
-- PostgreSQL database integration with Prisma ORM
-- JWT-based authentication
-- Password hashing with bcrypt
-- Role-based access control for protected API routes
+- Assigned workers can update only their own task statuses
 - Initial admin user setup with Prisma seed
 - CORS configuration for frontend-backend communication
-- Layered structure with routes, controllers, services and repositories
 
 Frontend:
-- React and Vite project scaffold
-- TypeScript setup
-- Frontend authentication flow with login screen, token storage and protected routes
+- Protected authentication flow with login, token storage and redirect handling
 - Shared dashboard layout with navigation, user role display and logout
-- Frontend API clients for authentication and projects
-- My Tasks page with role-aware task list, filters and quick status updates
-- Projects page with project list, creation form, loading and error states
-- Duplicate project name feedback on project creation
-- Project details page with stages, tasks and project members
-- Project name editing flow with duplicate-name feedback
-- Admin project deletion flow with confirmation and redirect
-- Project member management with user creation, member assignment and removal
-- Stage creation flow on the project details page
-- Stage editing and deletion flows with confirmation
-- Task creation flow with priority, due date, description and assignee fields
-- Task editing and deletion flows for admins and managers
-- Task status update flow with role-aware actions
-- Project task overview with status and priority filters
-- Frontend application development in progress
+- Projects page with project creation, duplicate-name feedback and project cards
+- Project details page with project summary, stages, tasks and project members
+- Project name editing and admin-only project deletion
+- Project member management with user creation, assignment and removal
+- Stage creation, editing and deletion with confirmation
+- Task creation with title, description, priority, due date and assignee
+- Task editing and deletion for admins and managers
+- Role-aware task status updates
+- My Tasks dashboard with filters, task summary and quick status updates
+- Loading, empty and error states for main workflows
+
+---
+
+## User Roles
+
+Admin:
+- Manage projects, stages, tasks and project members
+- Create users and assign them to projects
+- Delete projects
+- View team tasks across projects
+
+Manager:
+- Manage projects, stages and tasks
+- Manage current project members where allowed by the UI
+- View team tasks across projects
+
+Worker:
+- View assigned tasks
+- Update the status of assigned tasks
+- Cannot create or delete management entities
+
+---
+
+## Main Workflows
+
+- Sign in with the seeded admin account
+- Create a project with a unique name
+- Add project members or create new users
+- Create stages inside a project
+- Create and assign tasks inside stages
+- Edit project, stage and task details
+- Track task progress from project details or the My Tasks dashboard
+- Delete tasks, stages or projects with confirmation where the role allows it
 
 ---
 
@@ -112,7 +139,21 @@ Tasks:
 ```txt
 construction-project/
   construction-backend/
+    prisma/
+    src/
+      controllers/
+      middlewares/
+      repositories/
+      routes/
+      services/
+      utils/
   construction-frontend/
+    src/
+      api/
+      auth/
+      components/
+      layout/
+      pages/
 ```
 
 ---
@@ -128,7 +169,7 @@ cd construction-app
 
 ---
 
-## Backend
+## Backend Setup
 
 ```bash
 cd construction-backend
@@ -187,13 +228,48 @@ http://localhost:3000
 
 On Windows PowerShell, if `npx prisma ...` is blocked by execution policy, use `npx.cmd prisma ...` instead.
 
+---
+
+## Frontend Setup
+
+```bash
+cd ../construction-frontend
+npm install
+npm run dev
+```
+
+Frontend runs on:
+
+```txt
+http://localhost:5173
+```
+
+---
+
+## Useful Checks
+
+Backend build:
+
+```bash
+cd construction-backend
+npm run build
+```
+
+Frontend lint and build:
+
+```bash
+cd construction-frontend
+npm run lint
+npm run build
+```
+
 Health check:
 
 ```http
 GET http://localhost:3000/health
 ```
 
-Authentication:
+Login:
 
 ```http
 POST http://localhost:3000/auth/login
@@ -222,28 +298,8 @@ GET http://localhost:3000/auth/me
 
 ---
 
-## Frontend
+## Development Status
 
-```bash
-cd ../construction-frontend
-npm install
-npm run dev
-```
+The core backend and frontend workflows are implemented. The application currently covers authentication, role-based access control, project management, stage management, task management, member assignment and a role-aware My Tasks dashboard.
 
-Frontend runs on:
-
-```txt
-http://localhost:5173
-```
-
----
-
-## Current Status
-
-Backend core functionality is implemented. Frontend development is in progress.
-
----
-
-## Note
-
-Features and structure will be extended during development.
+Planned improvements may include automated tests, richer reporting, activity history and deployment configuration.
