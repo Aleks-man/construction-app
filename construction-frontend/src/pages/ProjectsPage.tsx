@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { createProject, getProjects, type Project } from "../api/projects";
 import { useAuth } from "../auth/auth-context";
+import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 
 export function ProjectsPage() {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ export function ProjectsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const canCreateProject = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const hasProjectLoadError = !isLoading && Boolean(error) && projects.length === 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -95,7 +97,7 @@ export function ProjectsPage() {
         </section>
       ) : null}
 
-      {error ? <p className="form-error">{error}</p> : null}
+      {error && !hasProjectLoadError ? <p className="form-error">{error}</p> : null}
 
       <section className="projects-section">
         <div className="section-heading">
@@ -106,15 +108,15 @@ export function ProjectsPage() {
           <span className="counter-badge">{projects.length}</span>
         </div>
 
-        {isLoading ? <p className="muted">Loading projects...</p> : null}
+        {isLoading ? <LoadingState message="Loading projects..." /> : null}
 
-        {!isLoading && projects.length === 0 ? (
-          <div className="empty-state">
-            <h2>No projects yet</h2>
-            <p className="muted">
-              Create the first project to begin planning stages, tasks and team assignments.
-            </p>
-          </div>
+        {hasProjectLoadError ? <ErrorState message={error} title="Projects unavailable" /> : null}
+
+        {!isLoading && !error && projects.length === 0 ? (
+          <EmptyState
+            message="Create the first project to begin planning stages, tasks and team assignments."
+            title="No projects yet"
+          />
         ) : null}
 
         {!isLoading && projects.length > 0 ? (

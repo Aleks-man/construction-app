@@ -5,7 +5,6 @@ import { addProjectUser, removeProjectUser } from "../api/project-users";
 import {
   getProjectById,
   type Project,
-  type ProjectStage,
   type ProjectTask,
   type TaskPriority,
   type TaskStatus,
@@ -14,6 +13,16 @@ import { createStage } from "../api/stages";
 import { createTask, updateTaskStatus } from "../api/tasks";
 import { createUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
+import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { StageColumn } from "./StageColumn";
+import {
+  createEmptyTaskDraft,
+  filterTasks,
+  formatDate,
+  getTaskDraft,
+  getTaskSummary,
+  type TaskDraft,
+} from "./project-details-utils";
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams();
@@ -297,7 +306,7 @@ export function ProjectDetailsPage() {
   if (isLoading) {
     return (
       <main className="app-shell">
-        <p className="muted">Loading project...</p>
+        <LoadingState message="Loading project..." />
       </main>
     );
   }
@@ -308,10 +317,7 @@ export function ProjectDetailsPage() {
         <Link className="text-link" to="/projects">
           Back to projects
         </Link>
-        <div className="empty-state">
-          <h1>Project unavailable</h1>
-          <p className="muted">{error || "Unable to load project"}</p>
-        </div>
+        <ErrorState message={error || "Unable to load project"} title="Project unavailable" />
       </main>
     );
   }
@@ -582,23 +588,15 @@ export function ProjectDetailsPage() {
             />
           ))
         ) : (
-          <div className="empty-state">
-            <h2>No stages yet</h2>
-            <p className="muted">Create project stages to start organizing work.</p>
-          </div>
+          <EmptyState
+            message="Create project stages to start organizing work."
+            title="No stages yet"
+          />
         )}
       </section>
     </main>
   );
 }
-
-type TaskDraft = {
-  title: string;
-  description: string;
-  priority: TaskPriority;
-  dueDate: string;
-  assigneeId: string;
-};
 
 type UserDraft = {
   email: string;
@@ -606,224 +604,8 @@ type UserDraft = {
   role: UserRole;
 };
 
-function StageColumn({
-  canCreateTask,
-  isCreatingTask,
-  members,
-  onCreateTask,
-  onTaskDraftChange,
-  onUpdateTaskStatus,
-  priorityFilter,
-  stage,
-  statusFilter,
-  taskDraft,
-  updatingTaskId,
-  user,
-}: {
-  canCreateTask: boolean;
-  isCreatingTask: boolean;
-  members: Project["users"];
-  onCreateTask: () => void;
-  onTaskDraftChange: (draft: Partial<TaskDraft>) => void;
-  onUpdateTaskStatus: (task: ProjectTask, status: TaskStatus) => void;
-  priorityFilter: TaskPriority | "ALL";
-  stage: ProjectStage;
-  statusFilter: TaskStatus | "ALL";
-  taskDraft: TaskDraft;
-  updatingTaskId: number | null;
-  user: { id: number; role: string } | null;
-}) {
-  const visibleStageTasks = filterTasks(stage.tasks, statusFilter, priorityFilter);
-
-  return (
-    <article className="stage-column">
-      <div className="stage-header">
-        <h2>{stage.name}</h2>
-        <span className="counter-badge">{visibleStageTasks.length}</span>
-      </div>
-
-      {visibleStageTasks.length > 0 ? (
-        <div className="tasks-list">
-          {visibleStageTasks.map((task) => (
-            <TaskCard
-              canUpdateStatus={canUpdateTaskStatus(task, user)}
-              isUpdating={updatingTaskId === task.id}
-              key={task.id}
-              onUpdateStatus={(status) => onUpdateTaskStatus(task, status)}
-              task={task}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="muted">
-          {stage.tasks.length > 0 ? "No tasks match the filters." : "No tasks in this stage."}
-        </p>
-      )}
-
-      {canCreateTask ? (
-        <TaskCreateForm
-          isSubmitting={isCreatingTask}
-          members={members}
-          onChange={onTaskDraftChange}
-          onSubmit={onCreateTask}
-          stage={stage}
-          value={taskDraft}
-        />
-      ) : null}
-    </article>
-  );
-}
-
-function TaskCreateForm({
-  isSubmitting,
-  members,
-  onChange,
-  onSubmit,
-  stage,
-  value,
-}: {
-  isSubmitting: boolean;
-  members: Project["users"];
-  onChange: (draft: Partial<TaskDraft>) => void;
-  onSubmit: () => void;
-  stage: ProjectStage;
-  value: TaskDraft;
-}) {
-  const handleSubmit: ComponentProps<"form">["onSubmit"] = (event) => {
-    event.preventDefault();
-    onSubmit();
-  };
-
-  return (
-    <form className="task-create-form" onSubmit={handleSubmit}>
-      <label>
-        Task title
-        <input
-          onChange={(event) => onChange({ title: event.target.value })}
-          placeholder={`Task for ${stage.name}`}
-          value={value.title}
-        />
-      </label>
-
-      <label>
-        Description
-        <input
-          onChange={(event) => onChange({ description: event.target.value })}
-          placeholder="Optional details"
-          value={value.description}
-        />
-      </label>
-
-      <div className="task-form-grid">
-        <label>
-          Priority
-          <select
-            onChange={(event) => onChange({ priority: event.target.value as TaskPriority })}
-            value={value.priority}
-          >
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-          </select>
-        </label>
-
-        <label>
-          Due date
-          <input
-            onChange={(event) => onChange({ dueDate: event.target.value })}
-            type="date"
-            value={value.dueDate}
-          />
-        </label>
-      </div>
-
-      <label>
-        Assignee
-        <select
-          onChange={(event) => onChange({ assigneeId: event.target.value })}
-          value={value.assigneeId}
-        >
-          <option value="">Unassigned</option>
-          {members.map((member) => (
-            <option key={member.userId} value={member.userId}>
-              {member.user.email} ({member.user.role})
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <button disabled={isSubmitting || !value.title.trim()} type="submit">
-        {isSubmitting ? "Creating..." : "Add task"}
-      </button>
-    </form>
-  );
-}
-
-function TaskCard({
-  canUpdateStatus,
-  isUpdating,
-  onUpdateStatus,
-  task,
-}: {
-  canUpdateStatus: boolean;
-  isUpdating: boolean;
-  onUpdateStatus: (status: TaskStatus) => void;
-  task: ProjectTask;
-}) {
-  const nextStatuses = getNextStatuses(task.status);
-
-  return (
-    <article className="task-card">
-      <div className="task-card-header">
-        <h3>{task.title}</h3>
-        <span className={`status-pill status-${task.status.toLowerCase()}`}>{task.status}</span>
-      </div>
-
-      {task.description ? <p className="muted">{task.description}</p> : null}
-
-      <div className="task-meta">
-        <span>{task.priority}</span>
-        <span>{task.dueDate ? formatDate(task.dueDate) : "No due date"}</span>
-      </div>
-
-      {canUpdateStatus && nextStatuses.length > 0 ? (
-        <div className="task-actions">
-          {nextStatuses.map((status) => (
-            <button
-              disabled={isUpdating}
-              key={status}
-              onClick={() => onUpdateStatus(status)}
-              type="button"
-            >
-              {getStatusActionLabel(status)}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(date));
-}
-
 function getProjectErrorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : "Unable to load project";
-}
-
-function createEmptyTaskDraft(): TaskDraft {
-  return {
-    title: "",
-    description: "",
-    priority: "MEDIUM",
-    dueDate: "",
-    assigneeId: "",
-  };
 }
 
 function createEmptyUserDraft(): UserDraft {
@@ -832,73 +614,4 @@ function createEmptyUserDraft(): UserDraft {
     password: "",
     role: "WORKER",
   };
-}
-
-function getTaskDraft(drafts: Record<number, TaskDraft>, stageId: number) {
-  return drafts[stageId] ?? createEmptyTaskDraft();
-}
-
-function canUpdateTaskStatus(task: ProjectTask, user: { id: number; role: string } | null) {
-  if (!user) {
-    return false;
-  }
-
-  if (user.role === "ADMIN" || user.role === "MANAGER") {
-    return true;
-  }
-
-  return user.role === "WORKER" && task.assigneeId === user.id;
-}
-
-function getNextStatuses(status: TaskStatus): TaskStatus[] {
-  if (status === "NEW") {
-    return ["IN_PROGRESS", "DONE"];
-  }
-
-  if (status === "IN_PROGRESS") {
-    return ["DONE"];
-  }
-
-  return [];
-}
-
-function getStatusActionLabel(status: TaskStatus) {
-  if (status === "IN_PROGRESS") {
-    return "Start";
-  }
-
-  if (status === "DONE") {
-    return "Mark done";
-  }
-
-  return status;
-}
-
-function filterTasks(
-  tasks: ProjectTask[],
-  statusFilter: TaskStatus | "ALL",
-  priorityFilter: TaskPriority | "ALL",
-) {
-  return tasks.filter((task) => {
-    const matchesStatus = statusFilter === "ALL" || task.status === statusFilter;
-    const matchesPriority = priorityFilter === "ALL" || task.priority === priorityFilter;
-
-    return matchesStatus && matchesPriority;
-  });
-}
-
-function getTaskSummary(tasks: ProjectTask[]) {
-  return tasks.reduce(
-    (summary, task) => ({
-      ...summary,
-      [task.status]: summary[task.status] + 1,
-      HIGH: task.priority === "HIGH" ? summary.HIGH + 1 : summary.HIGH,
-    }),
-    {
-      NEW: 0,
-      IN_PROGRESS: 0,
-      DONE: 0,
-      HIGH: 0,
-    },
-  );
 }

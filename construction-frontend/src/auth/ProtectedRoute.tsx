@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { LoadingState } from "../components/StateView";
 import { useAuth } from "./auth-context";
 
 export function ProtectedRoute() {
@@ -8,7 +9,7 @@ export function ProtectedRoute() {
   if (isLoading) {
     return (
       <div className="screen-center">
-        <p className="muted">Loading session...</p>
+        <LoadingState message="Loading session..." />
       </div>
     );
   }
