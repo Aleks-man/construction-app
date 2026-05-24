@@ -11,7 +11,7 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from "../api/projects";
-import { createStage } from "../api/stages";
+import { createStage, deleteStage, updateStage } from "../api/stages";
 import { createTask, updateTaskStatus } from "../api/tasks";
 import { createUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
@@ -49,6 +49,8 @@ export function ProjectDetailsPage() {
   const [isEditingProjectName, setIsEditingProjectName] = useState(false);
   const [isUpdatingProjectName, setIsUpdatingProjectName] = useState(false);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
+  const [updatingStageId, setUpdatingStageId] = useState<number | null>(null);
+  const [deletingStageId, setDeletingStageId] = useState<number | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [creatingTaskStageId, setCreatingTaskStageId] = useState<number | null>(null);
@@ -56,6 +58,7 @@ export function ProjectDetailsPage() {
   const canEditProject = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canDeleteProject = user?.role === "ADMIN";
   const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const canManageStages = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canManageMembers = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateUsers = user?.role === "ADMIN";
@@ -349,6 +352,59 @@ export function ProjectDetailsPage() {
       setIsUpdatingProjectName(false);
     }
   };
+
+  async function handleUpdateStageName(stageId: number, name: string) {
+    if (!project) {
+      return false;
+    }
+
+    setError("");
+    setUpdatingStageId(stageId);
+
+    try {
+      const updatedStage = await updateStage(stageId, { name });
+      setProject({
+        ...project,
+        stages: project.stages.map((stage) =>
+          stage.id === updatedStage.id ? { ...stage, name: updatedStage.name } : stage,
+        ),
+      });
+      return true;
+    } catch (stageUpdateError) {
+      setError(getProjectErrorMessage(stageUpdateError));
+      return false;
+    } finally {
+      setUpdatingStageId(null);
+    }
+  }
+
+  async function handleDeleteStage(stageId: number) {
+    if (!project) {
+      return false;
+    }
+
+    setError("");
+    setDeletingStageId(stageId);
+
+    try {
+      await deleteStage(stageId);
+      setProject({
+        ...project,
+        stages: project.stages.filter((stage) => stage.id !== stageId),
+      });
+      setTaskDrafts((currentDrafts) => {
+        const nextDrafts = { ...currentDrafts };
+        delete nextDrafts[stageId];
+        return nextDrafts;
+      });
+      return true;
+    } catch (stageDeleteError) {
+      setError(getProjectErrorMessage(stageDeleteError));
+      return false;
+    } finally {
+      setDeletingStageId(null);
+    }
+  }
 
   async function handleDeleteProject() {
     if (!project) {
@@ -736,15 +792,20 @@ export function ProjectDetailsPage() {
           project.stages.map((stage) => (
             <StageColumn
               canCreateTask={canCreateTask}
+              canManageStage={canManageStages}
+              deletingStageId={deletingStageId}
               key={stage.id}
               members={project.users}
               onCreateTask={() => handleCreateTask(stage.id)}
+              onDeleteStage={handleDeleteStage}
               onTaskDraftChange={(draft) => updateTaskDraft(stage.id, draft)}
               onUpdateTaskStatus={handleUpdateTaskStatus}
+              onUpdateStageName={handleUpdateStageName}
               priorityFilter={taskPriorityFilter}
               stage={stage}
               statusFilter={taskStatusFilter}
               taskDraft={getTaskDraft(taskDrafts, stage.id)}
+              updatingStageId={updatingStageId}
               updatingTaskId={updatingTaskId}
               user={user}
               isCreatingTask={creatingTaskStageId === stage.id}

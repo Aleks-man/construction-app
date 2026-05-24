@@ -37,8 +37,14 @@ export const stageRepository = {
   },
 
   deleteById(id: number) {
-    return prisma.stage.delete({
-      where: { id },
+    return prisma.$transaction(async (tx) => {
+      await tx.task.deleteMany({
+        where: { stageId: id },
+      });
+
+      return tx.stage.delete({
+        where: { id },
+      });
     });
   },
 };

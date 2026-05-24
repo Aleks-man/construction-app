@@ -30,6 +30,7 @@ Backend:
 - User, project, stage and task management
 - Unique project name validation with duplicate-name conflict responses
 - Transactional project deletion with related stages, tasks and members
+- Transactional stage deletion with related tasks
 - Extended task model with description, priority, due date and timestamps
 - Task filtering by status, priority, assignee, stage and due date range
 - Assigned workers can update the status of their own tasks
@@ -54,6 +55,7 @@ Frontend:
 - Admin project deletion flow with confirmation and redirect
 - Project member management with user creation, member assignment and removal
 - Stage creation flow on the project details page
+- Stage editing and deletion flows with confirmation
 - Task creation flow with priority, due date, description and assignee fields
 - Task status update flow with role-aware actions
 - Project task overview with status and priority filters

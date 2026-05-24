@@ -7,3 +7,16 @@ export function createStage(data: { name: string; projectId: number }) {
     body: data,
   });
 }
+
+export function updateStage(stageId: number, data: { name: string }) {
+  return apiRequest<ProjectStage>(`/stages/${stageId}`, {
+    method: "PATCH",
+    body: data,
+  });
+}
+
+export function deleteStage(stageId: number) {
+  return apiRequest<ProjectStage>(`/stages/${stageId}`, {
+    method: "DELETE",
+  });
+}

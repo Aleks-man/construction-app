@@ -688,6 +688,49 @@ select:focus {
   margin-bottom: 14px;
 }
 
+.stage-header h2 {
+  margin-bottom: 4px;
+}
+
+.stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.text-button {
+  background: transparent;
+  color: #1f5f5b;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: auto;
+  padding: 0;
+}
+
+.danger-text-button {
+  color: #a8071a;
+}
+
+.stage-edit-form,
+.stage-delete-confirm {
+  background: #f6f7f9;
+  border: 1px solid #e7ebef;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+}
+
+.stage-edit-form {
+  flex: 1;
+}
+
+.stage-delete-confirm {
+  background: #fffafa;
+  border-color: #ffccc7;
+}
+
 .tasks-list {
   display: grid;
   gap: 12px;
