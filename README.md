@@ -42,6 +42,7 @@ Backend:
 - Assigned workers can update only their own task statuses
 - Initial admin user setup with Prisma seed
 - CORS configuration for frontend-backend communication
+- Backend API tests for authentication, project validation and worker task permissions
 
 Frontend:
 - Protected authentication flow with login, token storage and redirect handling
@@ -253,6 +254,13 @@ Backend build:
 ```bash
 cd construction-backend
 npm run build
+```
+
+Backend API tests:
+
+```bash
+cd construction-backend
+npm test
 ```
 
 Frontend lint and build:
