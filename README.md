@@ -46,6 +46,7 @@ Frontend:
 - Frontend API clients for authentication and projects
 - Projects page with project list, creation form, loading and error states
 - Project details page with stages, tasks and project members
+- Project member management with user creation, member assignment and removal
 - Stage creation flow on the project details page
 - Task creation flow with priority, due date, description and assignee fields
 - Task status update flow with role-aware actions
