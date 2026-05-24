@@ -85,6 +85,7 @@ export function ProjectsPage() {
             <label>
               Project name
               <input
+                aria-describedby={error && !hasProjectLoadError ? "project-create-error" : undefined}
                 onChange={(event) => setProjectName(event.target.value)}
                 placeholder="Residential complex A"
                 value={projectName}
@@ -97,7 +98,11 @@ export function ProjectsPage() {
         </section>
       ) : null}
 
-      {error && !hasProjectLoadError ? <p className="form-error">{error}</p> : null}
+      {error && !hasProjectLoadError ? (
+        <p className="form-error" id="project-create-error">
+          {error}
+        </p>
+      ) : null}
 
       <section className="projects-section">
         <div className="section-heading">

@@ -28,6 +28,7 @@ Backend:
 
 Backend:
 - User, project, stage and task management
+- Unique project name validation with duplicate-name conflict responses
 - Transactional project deletion with related stages, tasks and members
 - Extended task model with description, priority, due date and timestamps
 - Task filtering by status, priority, assignee, stage and due date range
@@ -47,6 +48,7 @@ Frontend:
 - Shared dashboard layout with navigation, user role display and logout
 - Frontend API clients for authentication and projects
 - Projects page with project list, creation form, loading and error states
+- Duplicate project name feedback on project creation
 - Project details page with stages, tasks and project members
 - Admin project deletion flow with confirmation and redirect
 - Project member management with user creation, member assignment and removal

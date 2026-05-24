@@ -22,6 +22,21 @@ export const projectRepository = {
     });
   },
 
+  findByName(name: string, excludeProjectId?: number) {
+    return prisma.project.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+        ...(excludeProjectId ? { id: { not: excludeProjectId } } : {}),
+      },
+      select: {
+        id: true,
+      },
+    });
+  },
+
   updateById(id: number, name: string) {
     return prisma.project.update({
       where: { id },
