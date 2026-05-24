@@ -20,7 +20,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -104,7 +105,8 @@ label {
   gap: 8px;
 }
 
-input {
+input,
+select {
   background: #ffffff;
   border: 1px solid #cfd6df;
   border-radius: 6px;
@@ -113,7 +115,8 @@ input {
   padding: 10px 12px;
 }
 
-input:focus {
+input:focus,
+select:focus {
   border-color: #24746f;
   box-shadow: 0 0 0 3px rgba(36, 116, 111, 0.14);
   outline: none;
@@ -449,6 +452,32 @@ input:focus {
   gap: 10px;
 }
 
+.task-create-form {
+  border-top: 1px solid #e7ebef;
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.task-form-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.task-create-form button {
+  align-items: center;
+  background: #24746f;
+  border-radius: 6px;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
+}
+
 @media (max-width: 720px) {
   .auth-panel {
     padding: 28px 22px;
@@ -472,5 +501,9 @@ input:focus {
 
   .summary-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .task-form-grid {
+    grid-template-columns: 1fr;
   }
 }

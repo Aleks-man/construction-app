@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
-import { getProjectById, type Project, type ProjectTask } from "../api/projects";
+import {
+  getProjectById,
+  type Project,
+  type ProjectStage,
+  type ProjectTask,
+  type TaskPriority,
+} from "../api/projects";
 import { createStage } from "../api/stages";
+import { createTask } from "../api/tasks";
 import { useAuth } from "../auth/auth-context";
 
 export function ProjectDetailsPage() {
@@ -10,10 +17,13 @@ export function ProjectDetailsPage() {
   const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [stageName, setStageName] = useState("");
+  const [taskDrafts, setTaskDrafts] = useState<Record<number, TaskDraft>>({});
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
+  const [creatingTaskStageId, setCreatingTaskStageId] = useState<number | null>(null);
   const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
   const parsedProjectId = useMemo(() => Number(projectId), [projectId]);
 
   useEffect(() => {
@@ -79,6 +89,58 @@ export function ProjectDetailsPage() {
       setIsCreatingStage(false);
     }
   };
+
+  async function handleCreateTask(stageId: number) {
+    if (!project) {
+      return;
+    }
+
+    const draft = getTaskDraft(taskDrafts, stageId);
+    const title = draft.title.trim();
+
+    if (!title) {
+      return;
+    }
+
+    setError("");
+    setCreatingTaskStageId(stageId);
+
+    try {
+      const createdTask = await createTask({
+        title,
+        description: draft.description.trim() || null,
+        priority: draft.priority,
+        dueDate: draft.dueDate ? new Date(draft.dueDate).toISOString() : null,
+        stageId,
+        assigneeId: draft.assigneeId ? Number(draft.assigneeId) : null,
+      });
+
+      setProject({
+        ...project,
+        stages: project.stages.map((stage) =>
+          stage.id === stageId ? { ...stage, tasks: [...stage.tasks, createdTask] } : stage,
+        ),
+      });
+      setTaskDrafts((currentDrafts) => ({
+        ...currentDrafts,
+        [stageId]: createEmptyTaskDraft(),
+      }));
+    } catch (taskError) {
+      setError(getProjectErrorMessage(taskError));
+    } finally {
+      setCreatingTaskStageId(null);
+    }
+  }
+
+  function updateTaskDraft(stageId: number, draft: Partial<TaskDraft>) {
+    setTaskDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [stageId]: {
+        ...getTaskDraft(currentDrafts, stageId),
+        ...draft,
+      },
+    }));
+  }
 
   if (isLoading) {
     return (
@@ -198,6 +260,17 @@ export function ProjectDetailsPage() {
               ) : (
                 <p className="muted">No tasks in this stage.</p>
               )}
+
+              {canCreateTask ? (
+                <TaskCreateForm
+                  isSubmitting={creatingTaskStageId === stage.id}
+                  members={project.users}
+                  onChange={(draft) => updateTaskDraft(stage.id, draft)}
+                  onSubmit={() => handleCreateTask(stage.id)}
+                  stage={stage}
+                  value={getTaskDraft(taskDrafts, stage.id)}
+                />
+              ) : null}
             </article>
           ))
         ) : (
@@ -208,6 +281,99 @@ export function ProjectDetailsPage() {
         )}
       </section>
     </main>
+  );
+}
+
+type TaskDraft = {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  dueDate: string;
+  assigneeId: string;
+};
+
+function TaskCreateForm({
+  isSubmitting,
+  members,
+  onChange,
+  onSubmit,
+  stage,
+  value,
+}: {
+  isSubmitting: boolean;
+  members: Project["users"];
+  onChange: (draft: Partial<TaskDraft>) => void;
+  onSubmit: () => void;
+  stage: ProjectStage;
+  value: TaskDraft;
+}) {
+  const handleSubmit: ComponentProps<"form">["onSubmit"] = (event) => {
+    event.preventDefault();
+    onSubmit();
+  };
+
+  return (
+    <form className="task-create-form" onSubmit={handleSubmit}>
+      <label>
+        Task title
+        <input
+          onChange={(event) => onChange({ title: event.target.value })}
+          placeholder={`Task for ${stage.name}`}
+          value={value.title}
+        />
+      </label>
+
+      <label>
+        Description
+        <input
+          onChange={(event) => onChange({ description: event.target.value })}
+          placeholder="Optional details"
+          value={value.description}
+        />
+      </label>
+
+      <div className="task-form-grid">
+        <label>
+          Priority
+          <select
+            onChange={(event) => onChange({ priority: event.target.value as TaskPriority })}
+            value={value.priority}
+          >
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        </label>
+
+        <label>
+          Due date
+          <input
+            onChange={(event) => onChange({ dueDate: event.target.value })}
+            type="date"
+            value={value.dueDate}
+          />
+        </label>
+      </div>
+
+      <label>
+        Assignee
+        <select
+          onChange={(event) => onChange({ assigneeId: event.target.value })}
+          value={value.assigneeId}
+        >
+          <option value="">Unassigned</option>
+          {members.map((member) => (
+            <option key={member.userId} value={member.userId}>
+              {member.user.email} ({member.user.role})
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <button disabled={isSubmitting || !value.title.trim()} type="submit">
+        {isSubmitting ? "Creating..." : "Add task"}
+      </button>
+    </form>
   );
 }
 
@@ -239,4 +405,18 @@ function formatDate(date: string) {
 
 function getProjectErrorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : "Unable to load project";
+}
+
+function createEmptyTaskDraft(): TaskDraft {
+  return {
+    title: "",
+    description: "",
+    priority: "MEDIUM",
+    dueDate: "",
+    assigneeId: "",
+  };
+}
+
+function getTaskDraft(drafts: Record<number, TaskDraft>, stageId: number) {
+  return drafts[stageId] ?? createEmptyTaskDraft();
 }
