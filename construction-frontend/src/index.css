@@ -352,6 +352,43 @@ select:focus {
   font-weight: 800;
 }
 
+.task-summary-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  margin: 0 0 18px;
+}
+
+.task-summary-grid div {
+  background: #f6f7f9;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.task-summary-grid dt,
+.task-summary-grid dd {
+  margin: 0;
+}
+
+.task-summary-grid dt {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.task-summary-grid dd {
+  color: #101820;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.filters-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+}
+
 .members-list {
   display: grid;
   gap: 10px;
@@ -517,6 +554,11 @@ select:focus {
 
   .summary-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .task-summary-grid,
+  .filters-row {
+    grid-template-columns: 1fr;
   }
 
   .task-form-grid {

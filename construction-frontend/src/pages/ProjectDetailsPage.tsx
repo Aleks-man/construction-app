@@ -19,6 +19,8 @@ export function ProjectDetailsPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [stageName, setStageName] = useState("");
   const [taskDrafts, setTaskDrafts] = useState<Record<number, TaskDraft>>({});
+  const [taskStatusFilter, setTaskStatusFilter] = useState<TaskStatus | "ALL">("ALL");
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState<TaskPriority | "ALL">("ALL");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
@@ -193,6 +195,8 @@ export function ProjectDetailsPage() {
   }
 
   const tasks = project.stages.flatMap((stage) => stage.tasks);
+  const visibleTasks = filterTasks(tasks, taskStatusFilter, taskPriorityFilter);
+  const taskSummary = getTaskSummary(tasks);
 
   return (
     <main className="app-shell">
@@ -222,6 +226,65 @@ export function ProjectDetailsPage() {
           </div>
         </dl>
       </header>
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <h2>Task overview</h2>
+            <p className="muted">Filter work by current status and priority.</p>
+          </div>
+          <span className="counter-badge">{visibleTasks.length}</span>
+        </div>
+
+        <dl className="task-summary-grid">
+          <div>
+            <dt>New</dt>
+            <dd>{taskSummary.NEW}</dd>
+          </div>
+          <div>
+            <dt>In progress</dt>
+            <dd>{taskSummary.IN_PROGRESS}</dd>
+          </div>
+          <div>
+            <dt>Done</dt>
+            <dd>{taskSummary.DONE}</dd>
+          </div>
+          <div>
+            <dt>High priority</dt>
+            <dd>{taskSummary.HIGH}</dd>
+          </div>
+        </dl>
+
+        <div className="filters-row">
+          <label>
+            Status
+            <select
+              onChange={(event) => setTaskStatusFilter(event.target.value as TaskStatus | "ALL")}
+              value={taskStatusFilter}
+            >
+              <option value="ALL">All statuses</option>
+              <option value="NEW">New</option>
+              <option value="IN_PROGRESS">In progress</option>
+              <option value="DONE">Done</option>
+            </select>
+          </label>
+
+          <label>
+            Priority
+            <select
+              onChange={(event) =>
+                setTaskPriorityFilter(event.target.value as TaskPriority | "ALL")
+              }
+              value={taskPriorityFilter}
+            >
+              <option value="ALL">All priorities</option>
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </label>
+        </div>
+      </section>
 
       <section className="panel">
         <div className="section-heading">
@@ -273,39 +336,21 @@ export function ProjectDetailsPage() {
       <section className="stages-layout">
         {project.stages.length > 0 ? (
           project.stages.map((stage) => (
-            <article className="stage-column" key={stage.id}>
-              <div className="stage-header">
-                <h2>{stage.name}</h2>
-                <span className="counter-badge">{stage.tasks.length}</span>
-              </div>
-
-              {stage.tasks.length > 0 ? (
-                <div className="tasks-list">
-                  {stage.tasks.map((task) => (
-                    <TaskCard
-                      canUpdateStatus={canUpdateTaskStatus(task, user)}
-                      isUpdating={updatingTaskId === task.id}
-                      key={task.id}
-                      onUpdateStatus={(status) => handleUpdateTaskStatus(task, status)}
-                      task={task}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="muted">No tasks in this stage.</p>
-              )}
-
-              {canCreateTask ? (
-                <TaskCreateForm
-                  isSubmitting={creatingTaskStageId === stage.id}
-                  members={project.users}
-                  onChange={(draft) => updateTaskDraft(stage.id, draft)}
-                  onSubmit={() => handleCreateTask(stage.id)}
-                  stage={stage}
-                  value={getTaskDraft(taskDrafts, stage.id)}
-                />
-              ) : null}
-            </article>
+            <StageColumn
+              canCreateTask={canCreateTask}
+              key={stage.id}
+              members={project.users}
+              onCreateTask={() => handleCreateTask(stage.id)}
+              onTaskDraftChange={(draft) => updateTaskDraft(stage.id, draft)}
+              onUpdateTaskStatus={handleUpdateTaskStatus}
+              priorityFilter={taskPriorityFilter}
+              stage={stage}
+              statusFilter={taskStatusFilter}
+              taskDraft={getTaskDraft(taskDrafts, stage.id)}
+              updatingTaskId={updatingTaskId}
+              user={user}
+              isCreatingTask={creatingTaskStageId === stage.id}
+            />
           ))
         ) : (
           <div className="empty-state">
@@ -325,6 +370,74 @@ type TaskDraft = {
   dueDate: string;
   assigneeId: string;
 };
+
+function StageColumn({
+  canCreateTask,
+  isCreatingTask,
+  members,
+  onCreateTask,
+  onTaskDraftChange,
+  onUpdateTaskStatus,
+  priorityFilter,
+  stage,
+  statusFilter,
+  taskDraft,
+  updatingTaskId,
+  user,
+}: {
+  canCreateTask: boolean;
+  isCreatingTask: boolean;
+  members: Project["users"];
+  onCreateTask: () => void;
+  onTaskDraftChange: (draft: Partial<TaskDraft>) => void;
+  onUpdateTaskStatus: (task: ProjectTask, status: TaskStatus) => void;
+  priorityFilter: TaskPriority | "ALL";
+  stage: ProjectStage;
+  statusFilter: TaskStatus | "ALL";
+  taskDraft: TaskDraft;
+  updatingTaskId: number | null;
+  user: { id: number; role: string } | null;
+}) {
+  const visibleStageTasks = filterTasks(stage.tasks, statusFilter, priorityFilter);
+
+  return (
+    <article className="stage-column">
+      <div className="stage-header">
+        <h2>{stage.name}</h2>
+        <span className="counter-badge">{visibleStageTasks.length}</span>
+      </div>
+
+      {visibleStageTasks.length > 0 ? (
+        <div className="tasks-list">
+          {visibleStageTasks.map((task) => (
+            <TaskCard
+              canUpdateStatus={canUpdateTaskStatus(task, user)}
+              isUpdating={updatingTaskId === task.id}
+              key={task.id}
+              onUpdateStatus={(status) => onUpdateTaskStatus(task, status)}
+              task={task}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="muted">
+          {stage.tasks.length > 0 ? "No tasks match the filters." : "No tasks in this stage."}
+        </p>
+      )}
+
+      {canCreateTask ? (
+        <TaskCreateForm
+          isSubmitting={isCreatingTask}
+          members={members}
+          onChange={onTaskDraftChange}
+          onSubmit={onCreateTask}
+          stage={stage}
+          value={taskDraft}
+        />
+      ) : null}
+    </article>
+  );
+}
 
 function TaskCreateForm({
   isSubmitting,
@@ -516,4 +629,33 @@ function getStatusActionLabel(status: TaskStatus) {
   }
 
   return status;
+}
+
+function filterTasks(
+  tasks: ProjectTask[],
+  statusFilter: TaskStatus | "ALL",
+  priorityFilter: TaskPriority | "ALL",
+) {
+  return tasks.filter((task) => {
+    const matchesStatus = statusFilter === "ALL" || task.status === statusFilter;
+    const matchesPriority = priorityFilter === "ALL" || task.priority === priorityFilter;
+
+    return matchesStatus && matchesPriority;
+  });
+}
+
+function getTaskSummary(tasks: ProjectTask[]) {
+  return tasks.reduce(
+    (summary, task) => ({
+      ...summary,
+      [task.status]: summary[task.status] + 1,
+      HIGH: task.priority === "HIGH" ? summary.HIGH + 1 : summary.HIGH,
+    }),
+    {
+      NEW: 0,
+      IN_PROGRESS: 0,
+      DONE: 0,
+      HIGH: 0,
+    },
+  );
 }
