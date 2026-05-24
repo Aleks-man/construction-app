@@ -50,6 +50,7 @@ Frontend:
 - Projects page with project list, creation form, loading and error states
 - Duplicate project name feedback on project creation
 - Project details page with stages, tasks and project members
+- Project name editing flow with duplicate-name feedback
 - Admin project deletion flow with confirmation and redirect
 - Project member management with user creation, member assignment and removal
 - Stage creation flow on the project details page

@@ -447,6 +447,52 @@ select:focus {
   justify-items: end;
 }
 
+.project-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.project-title-row h1 {
+  margin-bottom: 0;
+}
+
+.project-edit-button {
+  min-height: 36px;
+  padding: 8px 12px;
+}
+
+.project-edit-form {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.compact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.compact-actions button,
+.project-edit-form button[type="submit"] {
+  align-items: center;
+  background: #24746f;
+  border-radius: 6px;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
+}
+
+.compact-actions .secondary-button {
+  background: #eef4f3;
+  color: #1f5f5b;
+}
+
 .summary-grid {
   display: grid;
   gap: 10px;

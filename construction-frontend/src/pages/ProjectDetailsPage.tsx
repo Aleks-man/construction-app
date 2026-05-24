@@ -5,6 +5,7 @@ import { addProjectUser, removeProjectUser } from "../api/project-users";
 import {
   deleteProject,
   getProjectById,
+  updateProject,
   type Project,
   type ProjectTask,
   type TaskPriority,
@@ -32,22 +33,27 @@ export function ProjectDetailsPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [users, setUsers] = useState<AppUser[]>([]);
   const [stageName, setStageName] = useState("");
+  const [projectNameDraft, setProjectNameDraft] = useState("");
   const [taskDrafts, setTaskDrafts] = useState<Record<number, TaskDraft>>({});
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [newUserDraft, setNewUserDraft] = useState<UserDraft>(createEmptyUserDraft());
   const [taskStatusFilter, setTaskStatusFilter] = useState<TaskStatus | "ALL">("ALL");
   const [taskPriorityFilter, setTaskPriorityFilter] = useState<TaskPriority | "ALL">("ALL");
   const [error, setError] = useState("");
+  const [projectLoadError, setProjectLoadError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const [isEditingProjectName, setIsEditingProjectName] = useState(false);
+  const [isUpdatingProjectName, setIsUpdatingProjectName] = useState(false);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [creatingTaskStageId, setCreatingTaskStageId] = useState<number | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const canEditProject = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canDeleteProject = user?.role === "ADMIN";
   const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -60,7 +66,7 @@ export function ProjectDetailsPage() {
 
     async function loadProject() {
       if (!Number.isInteger(parsedProjectId) || parsedProjectId <= 0) {
-        setError("Project id is invalid");
+        setProjectLoadError("Project id is invalid");
         setIsLoading(false);
         return;
       }
@@ -73,7 +79,7 @@ export function ProjectDetailsPage() {
         }
       } catch (projectError) {
         if (isMounted) {
-          setError(getProjectErrorMessage(projectError));
+          setProjectLoadError(getProjectErrorMessage(projectError));
         }
       } finally {
         if (isMounted) {
@@ -88,6 +94,12 @@ export function ProjectDetailsPage() {
       isMounted = false;
     };
   }, [parsedProjectId]);
+
+  useEffect(() => {
+    if (project && !isEditingProjectName) {
+      setProjectNameDraft(project.name);
+    }
+  }, [isEditingProjectName, project]);
 
   useEffect(() => {
     let isMounted = true;
@@ -308,6 +320,36 @@ export function ProjectDetailsPage() {
     }
   }
 
+  const handleUpdateProjectName: ComponentProps<"form">["onSubmit"] = async (event) => {
+    event.preventDefault();
+
+    if (!project) {
+      return;
+    }
+
+    const name = projectNameDraft.trim();
+
+    if (!name || name === project.name) {
+      setProjectNameDraft(project.name);
+      setIsEditingProjectName(false);
+      return;
+    }
+
+    setError("");
+    setIsUpdatingProjectName(true);
+
+    try {
+      const updatedProject = await updateProject(project.id, { name });
+      setProject(updatedProject);
+      setProjectNameDraft(updatedProject.name);
+      setIsEditingProjectName(false);
+    } catch (projectUpdateError) {
+      setError(getProjectErrorMessage(projectUpdateError));
+    } finally {
+      setIsUpdatingProjectName(false);
+    }
+  };
+
   async function handleDeleteProject() {
     if (!project) {
       return;
@@ -333,13 +375,16 @@ export function ProjectDetailsPage() {
     );
   }
 
-  if (error || !project) {
+  if (!project) {
     return (
       <main className="app-shell">
         <Link className="text-link" to="/projects">
           Back to projects
         </Link>
-        <ErrorState message={error || "Unable to load project"} title="Project unavailable" />
+        <ErrorState
+          message={projectLoadError || "Unable to load project"}
+          title="Project unavailable"
+        />
       </main>
     );
   }
@@ -360,7 +405,56 @@ export function ProjectDetailsPage() {
       <header className="project-hero">
         <div>
           <p className="eyebrow">Project #{project.id}</p>
-          <h1>{project.name}</h1>
+          {isEditingProjectName ? (
+            <form className="project-edit-form" onSubmit={handleUpdateProjectName}>
+              <label>
+                Project name
+                <input
+                  aria-describedby={error ? "project-action-error" : undefined}
+                  autoFocus
+                  onChange={(event) => setProjectNameDraft(event.target.value)}
+                  value={projectNameDraft}
+                />
+              </label>
+              <div className="compact-actions">
+                <button
+                  className="secondary-button"
+                  disabled={isUpdatingProjectName}
+                  onClick={() => {
+                    setProjectNameDraft(project.name);
+                    setIsEditingProjectName(false);
+                    setError("");
+                  }}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isUpdatingProjectName || !projectNameDraft.trim()}
+                  type="submit"
+                >
+                  {isUpdatingProjectName ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="project-title-row">
+              <h1>{project.name}</h1>
+              {canEditProject ? (
+                <button
+                  className="secondary-button project-edit-button"
+                  onClick={() => {
+                    setProjectNameDraft(project.name);
+                    setIsEditingProjectName(true);
+                    setError("");
+                  }}
+                  type="button"
+                >
+                  Edit
+                </button>
+              ) : null}
+            </div>
+          )}
           <p className="muted">Created {formatDate(project.createdAt)}</p>
         </div>
 
@@ -631,7 +725,11 @@ export function ProjectDetailsPage() {
         </section>
       ) : null}
 
-      {error ? <p className="form-error">{error}</p> : null}
+      {error ? (
+        <p className="form-error" id="project-action-error">
+          {error}
+        </p>
+      ) : null}
 
       <section className="stages-layout">
         {project.stages.length > 0 ? (

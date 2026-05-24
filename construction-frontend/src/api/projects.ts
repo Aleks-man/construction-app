@@ -55,6 +55,13 @@ export function createProject(data: { name: string }) {
   });
 }
 
+export function updateProject(projectId: number, data: { name: string }) {
+  return apiRequest<Project>(`/projects/${projectId}`, {
+    method: "PATCH",
+    body: data,
+  });
+}
+
 export function deleteProject(projectId: number) {
   return apiRequest<Project>(`/projects/${projectId}`, {
     method: "DELETE",
