@@ -441,6 +441,12 @@ select:focus {
   padding: 28px;
 }
 
+.project-hero-side {
+  display: grid;
+  gap: 14px;
+  justify-items: end;
+}
+
 .summary-grid {
   display: grid;
   gap: 10px;
@@ -543,6 +549,39 @@ select:focus {
   font-weight: 800;
   min-height: 34px;
   padding: 7px 10px;
+}
+
+.project-delete-button {
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.danger-panel {
+  align-items: center;
+  background: #fffafa;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.danger-panel h2 {
+  margin-bottom: 6px;
+}
+
+.danger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.danger-actions .danger-button {
+  min-height: 44px;
+  padding: 10px 14px;
 }
 
 .team-management {
@@ -739,8 +778,25 @@ select:focus {
     grid-template-columns: 1fr;
   }
 
+  .project-hero-side {
+    justify-items: stretch;
+  }
+
   .summary-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .danger-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .danger-actions {
+    justify-content: stretch;
+  }
+
+  .danger-actions button {
+    flex: 1;
   }
 
   .task-summary-grid,

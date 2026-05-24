@@ -54,3 +54,9 @@ export function createProject(data: { name: string }) {
     body: data,
   });
 }
+
+export function deleteProject(projectId: number) {
+  return apiRequest<Project>(`/projects/${projectId}`, {
+    method: "DELETE",
+  });
+}

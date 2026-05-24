@@ -31,8 +31,26 @@ export const projectRepository = {
   },
 
   deleteById(id: number) {
-    return prisma.project.delete({
-      where: { id },
+    return prisma.$transaction(async (tx) => {
+      await tx.task.deleteMany({
+        where: {
+          stage: {
+            projectId: id,
+          },
+        },
+      });
+
+      await tx.stage.deleteMany({
+        where: { projectId: id },
+      });
+
+      await tx.projectUser.deleteMany({
+        where: { projectId: id },
+      });
+
+      return tx.project.delete({
+        where: { id },
+      });
     });
   },
 };

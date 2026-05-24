@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { addProjectUser, removeProjectUser } from "../api/project-users";
 import {
+  deleteProject,
   getProjectById,
   type Project,
   type ProjectTask,
@@ -26,6 +27,7 @@ import {
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -42,8 +44,11 @@ export function ProjectDetailsPage() {
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [creatingTaskStageId, setCreatingTaskStageId] = useState<number | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const canDeleteProject = user?.role === "ADMIN";
   const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canManageMembers = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -303,6 +308,23 @@ export function ProjectDetailsPage() {
     }
   }
 
+  async function handleDeleteProject() {
+    if (!project) {
+      return;
+    }
+
+    setError("");
+    setIsDeletingProject(true);
+
+    try {
+      await deleteProject(project.id);
+      navigate("/projects", { replace: true });
+    } catch (deleteError) {
+      setError(getProjectErrorMessage(deleteError));
+      setIsDeletingProject(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="app-shell">
@@ -342,21 +364,64 @@ export function ProjectDetailsPage() {
           <p className="muted">Created {formatDate(project.createdAt)}</p>
         </div>
 
-        <dl className="summary-grid">
-          <div>
-            <dt>Stages</dt>
-            <dd>{project.stages.length}</dd>
-          </div>
-          <div>
-            <dt>Tasks</dt>
-            <dd>{tasks.length}</dd>
-          </div>
-          <div>
-            <dt>Members</dt>
-            <dd>{project.users.length}</dd>
-          </div>
-        </dl>
+        <div className="project-hero-side">
+          <dl className="summary-grid">
+            <div>
+              <dt>Stages</dt>
+              <dd>{project.stages.length}</dd>
+            </div>
+            <div>
+              <dt>Tasks</dt>
+              <dd>{tasks.length}</dd>
+            </div>
+            <div>
+              <dt>Members</dt>
+              <dd>{project.users.length}</dd>
+            </div>
+          </dl>
+
+          {canDeleteProject ? (
+            <button
+              className="danger-button project-delete-button"
+              disabled={isDeletingProject}
+              onClick={() => setIsConfirmingDelete(true)}
+              type="button"
+            >
+              Delete project
+            </button>
+          ) : null}
+        </div>
       </header>
+
+      {isConfirmingDelete ? (
+        <section className="danger-panel">
+          <div>
+            <h2>Delete project?</h2>
+            <p className="muted">
+              This will permanently remove the project, its stages, tasks and team assignments.
+            </p>
+          </div>
+
+          <div className="danger-actions">
+            <button
+              className="secondary-button"
+              disabled={isDeletingProject}
+              onClick={() => setIsConfirmingDelete(false)}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className="danger-button"
+              disabled={isDeletingProject}
+              onClick={handleDeleteProject}
+              type="button"
+            >
+              {isDeletingProject ? "Deleting..." : "Delete permanently"}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="panel">
         <div className="section-heading">
