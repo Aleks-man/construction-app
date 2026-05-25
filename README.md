@@ -330,4 +330,4 @@ GET http://localhost:3000/auth/me
 
 The core backend and frontend workflows are implemented. The application currently covers authentication, role-based access control, project management, stage management, task management, member assignment and a role-aware My Tasks dashboard.
 
-Planned improvements may include automated tests, richer reporting, activity history and deployment configuration.
+Planned improvements may include broader test coverage, richer reporting, activity history and deployment configuration.
