@@ -68,6 +68,34 @@ describe("API", () => {
     });
   });
 
+  it("records project activity", async () => {
+    const admin = await createTestUser("activity-admin", "ADMIN");
+    const adminToken = await loginAs(admin);
+
+    const projectResponse = await request(app)
+      .post("/projects")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "API Test Activity Project" })
+      .expect(201);
+
+    const activityResponse = await request(app)
+      .get(`/projects/${projectResponse.body.id}/activity`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(activityResponse.body[0]).toMatchObject({
+      action: "PROJECT_CREATED",
+      entityType: "PROJECT",
+      entityId: projectResponse.body.id,
+      message: 'created project "API Test Activity Project"',
+      user: {
+        id: admin.id,
+        email: admin.email,
+        role: "ADMIN",
+      },
+    });
+  });
+
   it("allows assigned workers to update only their own task status", async () => {
     const adminToken = await loginAs(await createTestUser("task-admin", "ADMIN"));
     const assignedWorker = await createTestUser("assigned-worker", "WORKER");

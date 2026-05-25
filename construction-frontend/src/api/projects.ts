@@ -40,12 +40,28 @@ export type Project = {
   stages: ProjectStage[];
 };
 
+export type ProjectActivityLog = {
+  id: number;
+  action: string;
+  entityType: string;
+  entityId: number | null;
+  message: string;
+  projectId: number;
+  userId: number | null;
+  createdAt: string;
+  user: AuthUser | null;
+};
+
 export function getProjects() {
   return apiRequest<Project[]>("/projects");
 }
 
 export function getProjectById(projectId: number) {
   return apiRequest<Project>(`/projects/${projectId}`);
+}
+
+export function getProjectActivity(projectId: number) {
+  return apiRequest<ProjectActivityLog[]>(`/projects/${projectId}/activity`);
 }
 
 export function createProject(data: { name: string }) {

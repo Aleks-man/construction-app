@@ -1,8 +1,9 @@
 import { projectRepository } from "../repositories/project.repository";
 import { badRequest, conflict, notFound } from "../errors/http-error";
+import { activityService, type ActivityActor } from "./activity.service";
 
 export const projectService = {
-  async createProject(name: string) {
+  async createProject(name: string, actor?: ActivityActor) {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
@@ -11,7 +12,18 @@ export const projectService = {
 
     await ensureProjectNameIsAvailable(trimmedName);
 
-    return projectRepository.create(trimmedName);
+    const project = await projectRepository.create(trimmedName);
+
+    await activityService.record({
+      action: "PROJECT_CREATED",
+      entityType: "PROJECT",
+      entityId: project.id,
+      message: `created project "${project.name}"`,
+      projectId: project.id,
+      actor,
+    });
+
+    return project;
   },
 
   getProjects() {
@@ -28,8 +40,8 @@ export const projectService = {
     return project;
   },
 
-  async updateProject(id: number, name: string) {
-    await this.getProject(id);
+  async updateProject(id: number, name: string, actor?: ActivityActor) {
+    const existingProject = await this.getProject(id);
 
     const trimmedName = name.trim();
 
@@ -39,11 +51,31 @@ export const projectService = {
 
     await ensureProjectNameIsAvailable(trimmedName, id);
 
-    return projectRepository.updateById(id, trimmedName);
+    const project = await projectRepository.updateById(id, trimmedName);
+
+    await activityService.record({
+      action: "PROJECT_UPDATED",
+      entityType: "PROJECT",
+      entityId: project.id,
+      message: `renamed project from "${existingProject.name}" to "${project.name}"`,
+      projectId: project.id,
+      actor,
+    });
+
+    return project;
   },
 
-  async deleteProject(id: number) {
-    await this.getProject(id);
+  async deleteProject(id: number, actor?: ActivityActor) {
+    const project = await this.getProject(id);
+
+    await activityService.record({
+      action: "PROJECT_DELETED",
+      entityType: "PROJECT",
+      entityId: project.id,
+      message: `deleted project "${project.name}"`,
+      projectId: project.id,
+      actor,
+    });
 
     return projectRepository.deleteById(id);
   },

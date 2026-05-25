@@ -40,6 +40,7 @@ Backend:
 - Extended task model with description, priority, due date and timestamps
 - Task filtering by status, priority, assignee, stage and due date range
 - Assigned workers can update only their own task statuses
+- Project activity log for project, member, stage and task changes
 - Initial admin user setup with Prisma seed
 - CORS configuration for frontend-backend communication
 - Backend API tests for authentication, project validation and worker task permissions
@@ -55,6 +56,7 @@ Frontend:
 - Task creation with title, description, priority, due date and assignee
 - Task editing and deletion for admins and managers
 - Role-aware task status updates
+- Project activity timeline for recent team actions
 - My Tasks dashboard with filters, task summary and quick status updates
 - Loading, empty and error states for main workflows
 

@@ -23,7 +23,7 @@ export const taskController = {
         dueDate: optionalNullableDateTime(req.body.dueDate, "dueDate"),
         stageId: parsePositiveInt(String(req.body.stageId), "stageId"),
         assigneeId: parseOptionalNullableId(req.body.assigneeId, "assigneeId"),
-      });
+      }, req.user);
 
       res.status(201).json(task);
     } catch (error) {
@@ -90,7 +90,7 @@ export const taskController = {
             ? undefined
             : parsePositiveInt(String(req.body.stageId), "stageId"),
         assigneeId: parseOptionalNullableId(req.body.assigneeId, "assigneeId"),
-      });
+      }, req.user);
 
       res.json(task);
     } catch (error) {
@@ -114,7 +114,7 @@ export const taskController = {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const taskId = parsePositiveInt(req.params.id, "taskId");
-      const task = await taskService.deleteTask(taskId);
+      const task = await taskService.deleteTask(taskId, req.user);
       res.json(task);
     } catch (error) {
       next(error);

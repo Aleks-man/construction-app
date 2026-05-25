@@ -8,7 +8,7 @@ export const stageController = {
       const stage = await stageService.createStage({
         name: requireString(req.body.name, "name"),
         projectId: parsePositiveInt(String(req.body.projectId), "projectId"),
-      });
+      }, req.user);
 
       res.status(201).json(stage);
     } catch (error) {
@@ -48,7 +48,7 @@ export const stageController = {
           req.body.projectId === undefined
             ? undefined
             : parsePositiveInt(String(req.body.projectId), "projectId"),
-      });
+      }, req.user);
 
       res.json(stage);
     } catch (error) {
@@ -59,7 +59,7 @@ export const stageController = {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const stageId = parsePositiveInt(req.params.id, "stageId");
-      const stage = await stageService.deleteStage(stageId);
+      const stage = await stageService.deleteStage(stageId, req.user);
       res.json(stage);
     } catch (error) {
       next(error);

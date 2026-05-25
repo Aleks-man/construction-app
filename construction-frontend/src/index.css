@@ -567,6 +567,38 @@ select:focus {
   gap: 10px;
 }
 
+.activity-list {
+  display: grid;
+  gap: 10px;
+}
+
+.activity-item {
+  align-items: center;
+  background: #f6f7f9;
+  border-radius: 6px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.activity-item strong {
+  color: #1f5f5b;
+  font-size: 13px;
+}
+
+.activity-item p {
+  color: #344054;
+  margin-bottom: 0;
+}
+
+.activity-item time {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .member-row {
   align-items: center;
   background: #f6f7f9;
@@ -952,6 +984,11 @@ select:focus {
 
   .danger-actions button {
     flex: 1;
+  }
+
+  .activity-item {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .task-summary-grid,

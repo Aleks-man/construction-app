@@ -21,6 +21,7 @@ export const projectUserController = {
       const projectUser = await projectUserService.addUserToProject(
         parsePositiveInt(String(req.body.projectId), "projectId"),
         parsePositiveInt(String(req.body.userId), "userId"),
+        req.user,
       );
 
       res.status(201).json(projectUser);
@@ -34,6 +35,7 @@ export const projectUserController = {
       const projectUser = await projectUserService.removeUserFromProject(
         parsePositiveInt(req.params.projectId, "projectId"),
         parsePositiveInt(req.params.userId, "userId"),
+        req.user,
       );
 
       res.json(projectUser);

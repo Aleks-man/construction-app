@@ -3,6 +3,7 @@ import { projectUserRepository } from "../repositories/project-user.repository";
 import { stageRepository } from "../repositories/stage.repository";
 import { taskRepository } from "../repositories/task.repository";
 import { userRepository } from "../repositories/user.repository";
+import { activityService, type ActivityActor } from "./activity.service";
 import type { Role } from "./user.service";
 
 export const taskStatuses = ["NEW", "IN_PROGRESS", "DONE"] as const;
@@ -20,10 +21,10 @@ export const taskService = {
     dueDate?: Date | null;
     stageId: number;
     assigneeId?: number | null;
-  }) {
+  }, actor?: ActivityActor) {
     await ensureAssigneeCanBeAssigned(data.stageId, data.assigneeId);
 
-    return taskRepository.create({
+    const task = await taskRepository.create({
       title: normalizeTitle(data.title),
       description: normalizeOptionalText(data.description),
       status: data.status,
@@ -32,6 +33,17 @@ export const taskService = {
       stageId: data.stageId,
       assigneeId: data.assigneeId,
     });
+
+    await activityService.record({
+      action: "TASK_CREATED",
+      entityType: "TASK",
+      entityId: task.id,
+      message: `created task "${task.title}" in stage "${task.stage.name}"`,
+      projectId: task.stage.projectId,
+      actor,
+    });
+
+    return task;
   },
 
   getTasks(filters: {
@@ -70,6 +82,7 @@ export const taskService = {
       stageId: number;
       assigneeId: number | null;
     }>,
+    actor?: ActivityActor,
   ) {
     const existingTask = await this.getTask(id);
 
@@ -122,7 +135,18 @@ export const taskService = {
       throw badRequest("At least one field is required");
     }
 
-    return taskRepository.updateById(id, updateData);
+    const task = await taskRepository.updateById(id, updateData);
+
+    await activityService.record({
+      action: "TASK_UPDATED",
+      entityType: "TASK",
+      entityId: task.id,
+      message: `updated task "${task.title}"`,
+      projectId: task.stage.projectId,
+      actor,
+    });
+
+    return task;
   },
 
   async updateTaskStatus(
@@ -136,11 +160,31 @@ export const taskService = {
       throw forbidden("Workers can update only their assigned tasks");
     }
 
-    return taskRepository.updateById(id, { status });
+    const updatedTask = await taskRepository.updateById(id, { status });
+
+    await activityService.record({
+      action: "TASK_STATUS_UPDATED",
+      entityType: "TASK",
+      entityId: updatedTask.id,
+      message: `changed task "${updatedTask.title}" status from ${task.status} to ${updatedTask.status}`,
+      projectId: updatedTask.stage.projectId,
+      actor: currentUser,
+    });
+
+    return updatedTask;
   },
 
-  async deleteTask(id: number) {
-    await this.getTask(id);
+  async deleteTask(id: number, actor?: ActivityActor) {
+    const task = await this.getTask(id);
+
+    await activityService.record({
+      action: "TASK_DELETED",
+      entityType: "TASK",
+      entityId: task.id,
+      message: `deleted task "${task.title}"`,
+      projectId: task.stage.projectId,
+      actor,
+    });
 
     return taskRepository.deleteById(id);
   },

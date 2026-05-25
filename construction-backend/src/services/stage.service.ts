@@ -1,15 +1,27 @@
 import { badRequest, notFound } from "../errors/http-error";
 import { projectRepository } from "../repositories/project.repository";
 import { stageRepository } from "../repositories/stage.repository";
+import { activityService, type ActivityActor } from "./activity.service";
 
 export const stageService = {
-  async createStage(data: { name: string; projectId: number }) {
+  async createStage(data: { name: string; projectId: number }, actor?: ActivityActor) {
     await ensureProjectExists(data.projectId);
 
-    return stageRepository.create({
+    const stage = await stageRepository.create({
       name: normalizeName(data.name),
       projectId: data.projectId,
     });
+
+    await activityService.record({
+      action: "STAGE_CREATED",
+      entityType: "STAGE",
+      entityId: stage.id,
+      message: `created stage "${stage.name}"`,
+      projectId: stage.projectId,
+      actor,
+    });
+
+    return stage;
   },
 
   getStages(projectId?: number) {
@@ -26,8 +38,12 @@ export const stageService = {
     return stage;
   },
 
-  async updateStage(id: number, data: Partial<{ name: string; projectId: number }>) {
-    await this.getStage(id);
+  async updateStage(
+    id: number,
+    data: Partial<{ name: string; projectId: number }>,
+    actor?: ActivityActor,
+  ) {
+    const existingStage = await this.getStage(id);
 
     const updateData: Partial<{ name: string; projectId: number }> = {};
 
@@ -44,11 +60,33 @@ export const stageService = {
       throw badRequest("At least one field is required");
     }
 
-    return stageRepository.updateById(id, updateData);
+    const stage = await stageRepository.updateById(id, updateData);
+
+    if (updateData.name && updateData.name !== existingStage.name) {
+      await activityService.record({
+        action: "STAGE_UPDATED",
+        entityType: "STAGE",
+        entityId: stage.id,
+        message: `renamed stage from "${existingStage.name}" to "${stage.name}"`,
+        projectId: stage.projectId,
+        actor,
+      });
+    }
+
+    return stage;
   },
 
-  async deleteStage(id: number) {
-    await this.getStage(id);
+  async deleteStage(id: number, actor?: ActivityActor) {
+    const stage = await this.getStage(id);
+
+    await activityService.record({
+      action: "STAGE_DELETED",
+      entityType: "STAGE",
+      entityId: stage.id,
+      message: `deleted stage "${stage.name}"`,
+      projectId: stage.projectId,
+      actor,
+    });
 
     return stageRepository.deleteById(id);
   },

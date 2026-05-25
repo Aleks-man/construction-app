@@ -4,9 +4,11 @@ import { ApiError } from "../api/client";
 import { addProjectUser, removeProjectUser } from "../api/project-users";
 import {
   deleteProject,
+  getProjectActivity,
   getProjectById,
   updateProject,
   type Project,
+  type ProjectActivityLog,
   type ProjectTask,
   type TaskPriority,
   type TaskStatus,
@@ -32,6 +34,7 @@ export function ProjectDetailsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
+  const [activityLogs, setActivityLogs] = useState<ProjectActivityLog[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
   const [stageName, setStageName] = useState("");
   const [projectNameDraft, setProjectNameDraft] = useState("");
@@ -43,6 +46,7 @@ export function ProjectDetailsPage() {
   const [error, setError] = useState("");
   const [projectLoadError, setProjectLoadError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -79,10 +83,14 @@ export function ProjectDetailsPage() {
       }
 
       try {
-        const projectResponse = await getProjectById(parsedProjectId);
+        const [projectResponse, activityResponse] = await Promise.all([
+          getProjectById(parsedProjectId),
+          getProjectActivity(parsedProjectId),
+        ]);
 
         if (isMounted) {
           setProject(projectResponse);
+          setActivityLogs(activityResponse);
         }
       } catch (projectError) {
         if (isMounted) {
@@ -101,6 +109,19 @@ export function ProjectDetailsPage() {
       isMounted = false;
     };
   }, [parsedProjectId]);
+
+  async function refreshProjectActivity(projectIdToRefresh: number) {
+    setIsLoadingActivity(true);
+
+    try {
+      const activityResponse = await getProjectActivity(projectIdToRefresh);
+      setActivityLogs(activityResponse);
+    } catch (activityError) {
+      setError(getProjectErrorMessage(activityError));
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  }
 
   useEffect(() => {
     if (project && !isEditingProjectName) {
@@ -165,6 +186,7 @@ export function ProjectDetailsPage() {
         stages: [...project.stages, createdStage],
       });
       setStageName("");
+      await refreshProjectActivity(project.id);
     } catch (stageError) {
       setError(getProjectErrorMessage(stageError));
     } finally {
@@ -207,6 +229,7 @@ export function ProjectDetailsPage() {
         ...currentDrafts,
         [stageId]: createEmptyTaskDraft(),
       }));
+      await refreshProjectActivity(project.id);
     } catch (taskError) {
       setError(getProjectErrorMessage(taskError));
     } finally {
@@ -273,6 +296,7 @@ export function ProjectDetailsPage() {
         users: [...project.users, addedMember],
       });
       setSelectedMemberId("");
+      await refreshProjectActivity(project.id);
     } catch (memberError) {
       setError(getProjectErrorMessage(memberError));
     } finally {
@@ -294,6 +318,7 @@ export function ProjectDetailsPage() {
         ...project,
         users: project.users.filter((member) => member.userId !== userId),
       });
+      await refreshProjectActivity(project.id);
     } catch (memberError) {
       setError(getProjectErrorMessage(memberError));
     } finally {
@@ -320,6 +345,7 @@ export function ProjectDetailsPage() {
           ),
         })),
       });
+      await refreshProjectActivity(project.id);
     } catch (taskError) {
       setError(getProjectErrorMessage(taskError));
     } finally {
@@ -350,6 +376,7 @@ export function ProjectDetailsPage() {
         assigneeId: draft.assigneeId ? Number(draft.assigneeId) : null,
       });
       setProject(updateProjectTask(project, updatedTask));
+      await refreshProjectActivity(project.id);
       return true;
     } catch (taskUpdateError) {
       setError(getProjectErrorMessage(taskUpdateError));
@@ -377,6 +404,7 @@ export function ProjectDetailsPage() {
             : stage,
         ),
       });
+      await refreshProjectActivity(project.id);
       return true;
     } catch (taskDeleteError) {
       setError(getProjectErrorMessage(taskDeleteError));
@@ -409,6 +437,7 @@ export function ProjectDetailsPage() {
       setProject(updatedProject);
       setProjectNameDraft(updatedProject.name);
       setIsEditingProjectName(false);
+      await refreshProjectActivity(updatedProject.id);
     } catch (projectUpdateError) {
       setError(getProjectErrorMessage(projectUpdateError));
     } finally {
@@ -432,6 +461,7 @@ export function ProjectDetailsPage() {
           stage.id === updatedStage.id ? { ...stage, name: updatedStage.name } : stage,
         ),
       });
+      await refreshProjectActivity(project.id);
       return true;
     } catch (stageUpdateError) {
       setError(getProjectErrorMessage(stageUpdateError));
@@ -460,6 +490,7 @@ export function ProjectDetailsPage() {
         delete nextDrafts[stageId];
         return nextDrafts;
       });
+      await refreshProjectActivity(project.id);
       return true;
     } catch (stageDeleteError) {
       setError(getProjectErrorMessage(stageDeleteError));
@@ -698,6 +729,36 @@ export function ProjectDetailsPage() {
       <section className="panel">
         <div className="section-heading">
           <div>
+            <h2>Activity</h2>
+            <p className="muted">Recent project changes and team actions.</p>
+          </div>
+          <span className="counter-badge">{activityLogs.length}</span>
+        </div>
+
+        {isLoadingActivity ? <LoadingState message="Refreshing activity..." /> : null}
+
+        {!isLoadingActivity && activityLogs.length === 0 ? (
+          <p className="muted">No activity recorded yet.</p>
+        ) : null}
+
+        {!isLoadingActivity && activityLogs.length > 0 ? (
+          <div className="activity-list">
+            {activityLogs.slice(0, 8).map((activity) => (
+              <article className="activity-item" key={activity.id}>
+                <div>
+                  <strong>{activity.user?.email ?? "System"}</strong>
+                  <p>{activity.message}</p>
+                </div>
+                <time dateTime={activity.createdAt}>{formatDateTime(activity.createdAt)}</time>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
             <h2>Team</h2>
             <p className="muted">People assigned to this construction project.</p>
           </div>
@@ -898,6 +959,16 @@ type UserDraft = {
 
 function getProjectErrorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : "Unable to load project";
+}
+
+function formatDateTime(date: string) {
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(date));
 }
 
 function updateProjectTask(project: Project, updatedTask: ProjectTask) {
