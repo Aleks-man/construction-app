@@ -132,6 +132,7 @@ Projects:
 - `GET /projects`
 - `POST /projects`
 - `GET /projects/:id`
+- `GET /projects/:id/activity`
 - `PATCH /projects/:id`
 - `DELETE /projects/:id`
 
@@ -330,6 +331,6 @@ GET http://localhost:3000/auth/me
 
 ## Development Status
 
-The core backend and frontend workflows are implemented. The application currently covers authentication, role-based access control, project management, stage management, task management, member assignment and a role-aware My Tasks dashboard.
+The core backend and frontend workflows are implemented. The application currently covers authentication, role-based access control, project management, stage management, task management, member assignment, activity history and a role-aware My Tasks dashboard.
 
-Planned improvements may include broader test coverage, richer reporting, activity history and deployment configuration.
+Planned improvements may include deployment configuration, broader test coverage, richer reporting, file attachments and realtime updates.
