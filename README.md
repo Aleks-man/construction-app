@@ -93,6 +93,26 @@ Worker:
 
 ---
 
+## Screenshots
+
+### Login
+
+![Login screen](docs/screenshots/login.png)
+
+### Projects
+
+![Projects page](docs/screenshots/projects.png)
+
+### Project Details
+
+![Project details page](docs/screenshots/project-details.png)
+
+### My Tasks
+
+![My Tasks dashboard](docs/screenshots/my-tasks.png)
+
+---
+
 ## API Overview
 
 Auth:
