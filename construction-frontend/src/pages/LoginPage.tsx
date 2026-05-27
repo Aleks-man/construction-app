@@ -13,8 +13,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, login } = useAuth();
-  const [email, setEmail] = useState("admin@test.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,6 +61,7 @@ export function LoginPage() {
               autoComplete="email"
               name="email"
               onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
               required
               type="email"
               value={email}
@@ -73,6 +74,7 @@ export function LoginPage() {
               autoComplete="current-password"
               name="password"
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="Enter password"
               required
               type="password"
               value={password}
