@@ -209,6 +209,7 @@ Update `.env` values if needed:
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/construction_app"
+NODE_ENV="development"
 PORT=3000
 FRONTEND_ORIGINS="http://localhost:5173"
 JWT_SECRET="replace-with-a-long-random-secret"
@@ -266,6 +267,87 @@ Frontend runs on:
 ```txt
 http://localhost:5173
 ```
+
+Create local frontend environment file if the backend URL differs from the default:
+
+```bash
+copy .env.example .env
+```
+
+```env
+VITE_API_URL="http://localhost:3000"
+```
+
+---
+
+## Deployment
+
+Recommended free deployment setup:
+- Frontend: Vercel
+- Backend: Render
+- Database: Neon PostgreSQL
+
+### Backend Deployment
+
+Deploy `construction-backend` as a Node.js web service.
+
+Environment variables:
+
+```env
+DATABASE_URL="postgresql://..."
+NODE_ENV="production"
+FRONTEND_ORIGINS="https://your-frontend-domain.vercel.app"
+JWT_SECRET="replace-with-a-long-random-production-secret"
+JWT_EXPIRES_IN="1d"
+SEED_ADMIN_EMAIL="admin@test.com"
+SEED_ADMIN_PASSWORD="replace-with-a-demo-password"
+```
+
+The hosting platform usually provides `PORT` automatically in production.
+
+Build command:
+
+```bash
+npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+```
+
+Start command:
+
+```bash
+npm start
+```
+
+After the first deployment, create the demo admin user:
+
+```bash
+npm run seed
+```
+
+### Frontend Deployment
+
+Deploy `construction-frontend` as a Vite application.
+
+Environment variables:
+
+```env
+VITE_API_URL="https://your-backend-domain.onrender.com"
+```
+
+Build command:
+
+```bash
+npm run build
+```
+
+Output directory:
+
+```txt
+dist
+```
+
+The frontend includes a Vercel rewrite configuration so protected routes and project detail URLs continue to work after a browser refresh.
+
+Note: if the backend is hosted on a free Render instance, the first request after inactivity may take a few seconds while the service wakes up.
 
 ---
 

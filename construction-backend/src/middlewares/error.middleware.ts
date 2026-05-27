@@ -2,6 +2,8 @@ import type { NextFunction, Request, Response } from "express";
 import { Prisma } from "../../generated/prisma/client";
 import { conflict, HttpError } from "../errors/http-error";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export function errorMiddleware(
   error: unknown,
   _req: Request,
@@ -19,7 +21,8 @@ export function errorMiddleware(
     return;
   }
 
-  const message = error instanceof Error ? error.message : "Internal server error";
+  const message =
+    !isProduction && error instanceof Error ? error.message : "Internal server error";
 
   res.status(500).json({ message });
 }
