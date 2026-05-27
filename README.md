@@ -309,7 +309,13 @@ The hosting platform usually provides `PORT` automatically in production.
 Build command:
 
 ```bash
-npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+npm ci --include=dev && npx prisma generate && npx prisma migrate deploy && npm run build
+```
+
+If the host installs only production dependencies during build, TypeScript may fail because type packages are stored in `devDependencies`. Keep dev dependencies available during the build step, for example by setting:
+
+```env
+NPM_CONFIG_PRODUCTION=false
 ```
 
 Start command:
