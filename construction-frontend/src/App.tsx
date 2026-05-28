@@ -5,6 +5,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { MyTasksPage } from "./pages/MyTasksPage";
 import { ProjectDetailsPage } from "./pages/ProjectDetailsPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import { UsersPage } from "./pages/UsersPage";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
           <Route path="/my-tasks" element={<MyTasksPage />} />
+          <Route path="/users" element={<UsersPage />} />
         </Route>
       </Route>
       <Route path="/login" element={<LoginPage />} />

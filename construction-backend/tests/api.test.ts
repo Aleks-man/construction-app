@@ -153,6 +153,70 @@ describe("API", () => {
       assigneeId: assignedWorker.id,
     });
   });
+
+  it("allows admins to delete users without deleting assigned tasks", async () => {
+    const admin = await createTestUser("users-admin", "ADMIN");
+    const worker = await createTestUser("users-worker", "WORKER");
+    const adminToken = await loginAs(admin);
+
+    const project = await prisma.project.create({
+      data: {
+        name: "API Test User Deletion",
+        users: {
+          create: {
+            userId: worker.id,
+          },
+        },
+        stages: {
+          create: {
+            name: "API Test User Stage",
+            tasks: {
+              create: {
+                title: "API Test User Task",
+                assigneeId: worker.id,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        stages: {
+          include: {
+            tasks: true,
+          },
+        },
+      },
+    });
+
+    await request(app)
+      .delete(`/users/${admin.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(403);
+
+    await request(app)
+      .delete(`/users/${worker.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const deletedWorker = await prisma.user.findUnique({
+      where: { id: worker.id },
+    });
+    const projectMember = await prisma.projectUser.findUnique({
+      where: {
+        userId_projectId: {
+          userId: worker.id,
+          projectId: project.id,
+        },
+      },
+    });
+    const task = await prisma.task.findUnique({
+      where: { id: project.stages[0].tasks[0].id },
+    });
+
+    expect(deletedWorker).toBeNull();
+    expect(projectMember).toBeNull();
+    expect(task?.assigneeId).toBeNull();
+  });
 });
 
 const testPassword = "test1234";

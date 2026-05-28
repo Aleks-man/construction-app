@@ -34,6 +34,7 @@ Backend:
 - Password hashing with bcrypt
 - Role-based access control for protected API routes
 - User, project, project member, stage and task management
+- Safe user deletion with project membership cleanup and task unassignment
 - Unique project name validation with conflict responses
 - Transactional project deletion with related stages, tasks and members
 - Transactional stage deletion with related tasks
@@ -52,6 +53,7 @@ Frontend:
 - Project details page with project summary, stages, tasks and project members
 - Project name editing and admin-only project deletion
 - Project member management with user creation, assignment and removal
+- Admin user management page with role filters, user creation and deletion
 - Stage creation, editing and deletion with confirmation
 - Task creation with title, description, priority, due date and assignee
 - Task editing and deletion for admins and managers

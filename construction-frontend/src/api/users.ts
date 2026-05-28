@@ -19,3 +19,9 @@ export function createUser(data: { email: string; password: string; role: UserRo
     body: data,
   });
 }
+
+export function deleteUser(userId: number) {
+  return apiRequest<AppUser>(`/users/${userId}`, {
+    method: "DELETE",
+  });
+}

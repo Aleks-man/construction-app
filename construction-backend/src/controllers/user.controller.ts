@@ -60,7 +60,7 @@ export const userController = {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = parsePositiveInt(req.params.id, "userId");
-      const user = await userService.deleteUser(userId);
+      const user = await userService.deleteUser(userId, req.user?.id);
       res.json(user);
     } catch (error) {
       next(error);

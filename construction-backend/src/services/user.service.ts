@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { badRequest, notFound } from "../errors/http-error";
+import { badRequest, forbidden, notFound } from "../errors/http-error";
 import { userRepository } from "../repositories/user.repository";
 
 export const roles = ["ADMIN", "MANAGER", "WORKER"] as const;
@@ -58,7 +58,11 @@ export const userService = {
     return userRepository.updateById(id, updateData);
   },
 
-  async deleteUser(id: number) {
+  async deleteUser(id: number, currentUserId?: number) {
+    if (currentUserId === id) {
+      throw forbidden("You cannot delete your own user account");
+    }
+
     await this.getUser(id);
 
     return userRepository.deleteById(id);

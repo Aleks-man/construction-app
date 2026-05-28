@@ -154,6 +154,15 @@ select:focus {
   padding: 10px 12px;
 }
 
+.form-success {
+  background: #e6f4ea;
+  border: 1px solid #b7ebc6;
+  border-radius: 6px;
+  color: #1e7e34;
+  margin: 0 0 20px;
+  padding: 10px 12px;
+}
+
 .screen-center {
   align-items: center;
   display: flex;
@@ -714,6 +723,93 @@ select:focus {
   padding-top: 18px;
 }
 
+.users-create-form {
+  margin-top: 20px;
+}
+
+.role-tabs {
+  background: #f6f7f9;
+  border: 1px solid #e7ebef;
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 18px;
+  padding: 6px;
+}
+
+.role-tabs button {
+  align-items: center;
+  background: transparent;
+  border-radius: 6px;
+  color: #475467;
+  display: flex;
+  font-weight: 800;
+  gap: 8px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 10px;
+}
+
+.role-tabs button.active,
+.role-tabs button:hover {
+  background: #ffffff;
+  color: #1f5f5b;
+  box-shadow: 0 4px 14px rgba(23, 32, 42, 0.07);
+}
+
+.role-tabs span {
+  align-items: center;
+  background: #eef4f3;
+  border-radius: 999px;
+  color: #1f5f5b;
+  display: inline-flex;
+  font-size: 12px;
+  justify-content: center;
+  min-width: 24px;
+  padding: 2px 7px;
+}
+
+.users-list {
+  display: grid;
+  gap: 12px;
+}
+
+.user-card {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.user-card div {
+  min-width: 0;
+}
+
+.user-card strong {
+  color: #101820;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.user-card p {
+  margin-bottom: 0;
+}
+
+.current-user-badge {
+  background: #eef4f3;
+  border-radius: 999px;
+  color: #1f5f5b;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
 .stages-layout {
   display: grid;
   gap: 18px;
@@ -1121,12 +1217,22 @@ select:focus {
 
   .member-row,
   .member-form,
-  .member-form-wide {
+  .member-form-wide,
+  .users-create-form {
     align-items: stretch;
     grid-template-columns: 1fr;
   }
 
   .member-row {
+    flex-direction: column;
+  }
+
+  .role-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .user-card {
+    align-items: stretch;
     flex-direction: column;
   }
 }

@@ -53,9 +53,20 @@ export const userRepository = {
   },
 
   deleteById(id: number) {
-    return prisma.user.delete({
-      where: { id },
-      select: userSelect,
+    return prisma.$transaction(async (tx) => {
+      await tx.task.updateMany({
+        where: { assigneeId: id },
+        data: { assigneeId: null },
+      });
+
+      await tx.projectUser.deleteMany({
+        where: { userId: id },
+      });
+
+      return tx.user.delete({
+        where: { id },
+        select: userSelect,
+      });
     });
   },
 };
