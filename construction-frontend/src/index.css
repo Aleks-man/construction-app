@@ -14,10 +14,16 @@
   box-sizing: border-box;
 }
 
+html {
+  background: #f6f7f9;
+}
+
 body {
+  background: #f6f7f9;
   margin: 0;
   min-width: 320px;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 button,
@@ -1077,7 +1083,7 @@ select:focus {
   .sidebar {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     gap: 16px;
-    padding: 18px 16px;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 16px 18px;
     position: sticky;
     top: 0;
     z-index: 10;
