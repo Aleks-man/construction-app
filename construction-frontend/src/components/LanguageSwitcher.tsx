@@ -11,7 +11,11 @@ export function LanguageSwitcher() {
   const currentLanguage = getCurrentLanguage(i18n.language);
 
   return (
-    <div className="language-switcher" aria-label={t("common.language")}>
+    <div
+      className={`language-switcher language-switcher-${currentLanguage}`}
+      aria-label={t("common.language")}
+    >
+      <span className="language-switcher-thumb" aria-hidden="true" />
       {supportedLanguages.map((language) => (
         <button
           aria-pressed={currentLanguage === language}
