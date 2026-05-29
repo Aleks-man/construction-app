@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { createUser, deleteUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
@@ -8,6 +9,7 @@ const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
 
 export function UsersPage() {
   const { user } = useAuth();
+  const { i18n, t } = useTranslation();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [activeRole, setActiveRole] = useState<UserRole>("WORKER");
   const [email, setEmail] = useState("");
@@ -53,7 +55,7 @@ export function UsersPage() {
         }
       } catch (usersError) {
         if (isMounted) {
-          setError(getUserErrorMessage(usersError));
+          setError(getUserErrorMessage(usersError, t("users.loadError")));
         }
       } finally {
         if (isMounted) {
@@ -67,15 +69,12 @@ export function UsersPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   if (user?.role !== "ADMIN") {
     return (
       <main className="app-shell">
-        <ErrorState
-          message="Only admins can manage application users."
-          title="Users unavailable"
-        />
+        <ErrorState message={t("users.unavailableMessage")} title={t("users.unavailableTitle")} />
       </main>
     );
   }
@@ -98,9 +97,9 @@ export function UsersPage() {
       setPassword("");
       setRole("WORKER");
       setActiveRole(createdUser.role);
-      setSuccessMessage(`User ${createdUser.email} was created.`);
+      setSuccessMessage(t("users.createdMessage", { email: createdUser.email }));
     } catch (createError) {
-      setError(getUserErrorMessage(createError));
+      setError(getUserErrorMessage(createError, t("users.loadError")));
     } finally {
       setIsCreating(false);
     }
@@ -122,9 +121,9 @@ export function UsersPage() {
         currentUsers.filter((appUser) => appUser.id !== deletedUser.id),
       );
       setUserToDelete(null);
-      setSuccessMessage(`User ${deletedUser.email} was deleted.`);
+      setSuccessMessage(t("users.deletedMessage", { email: deletedUser.email }));
     } catch (deleteError) {
-      setError(getUserErrorMessage(deleteError));
+      setError(getUserErrorMessage(deleteError, t("users.loadError")));
     } finally {
       setIsDeleting(false);
     }
@@ -133,26 +132,24 @@ export function UsersPage() {
   return (
     <main className="app-shell">
       <header className="page-heading">
-        <p className="eyebrow">Users</p>
-        <h1>Team administration</h1>
-        <p className="muted">
-          Create admins, managers and workers, and remove accounts that are no longer needed.
-        </p>
+        <p className="eyebrow">{t("users.eyebrow")}</p>
+        <h1>{t("users.title")}</h1>
+        <p className="muted">{t("users.description")}</p>
       </header>
 
       <section className="panel">
         <div>
-          <h2>Create user</h2>
-          <p className="muted">New users can sign in immediately with the password you set.</p>
+          <h2>{t("users.createTitle")}</h2>
+          <p className="muted">{t("users.createDescription")}</p>
         </div>
 
         <form className="member-form member-form-wide users-create-form" onSubmit={handleCreateUser}>
           <label>
-            Email
+            {t("users.email")}
             <input
               autoComplete="email"
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="worker@example.com"
+              placeholder={t("users.emailPlaceholder")}
               required
               type="email"
               value={email}
@@ -160,12 +157,12 @@ export function UsersPage() {
           </label>
 
           <label>
-            Password
+            {t("users.password")}
             <input
               autoComplete="new-password"
               minLength={6}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="At least 6 characters"
+              placeholder={t("users.passwordPlaceholder")}
               required
               type="password"
               value={password}
@@ -173,18 +170,18 @@ export function UsersPage() {
           </label>
 
           <label>
-            Role
+            {t("users.role")}
             <select onChange={(event) => setRole(event.target.value as UserRole)} value={role}>
               {roles.map((roleOption) => (
                 <option key={roleOption} value={roleOption}>
-                  {formatRole(roleOption)}
+                  {t(`roles.${roleOption}`)}
                 </option>
               ))}
             </select>
           </label>
 
           <button disabled={isCreating || !email.trim() || password.length < 6} type="submit">
-            {isCreating ? "Creating..." : "Create user"}
+            {isCreating ? t("users.creating") : t("users.createUser")}
           </button>
         </form>
       </section>
@@ -195,13 +192,13 @@ export function UsersPage() {
       <section className="projects-section">
         <div className="section-heading">
           <div>
-            <h2>Users</h2>
-            <p className="muted">Review user roles and remove inactive accounts.</p>
+            <h2>{t("users.listTitle")}</h2>
+            <p className="muted">{t("users.listDescription")}</p>
           </div>
           <span className="counter-badge">{users.length}</span>
         </div>
 
-        <div className="role-tabs" role="tablist" aria-label="User role filter">
+        <div className="role-tabs" role="tablist" aria-label={t("users.roleFilter")}>
           {roles.map((roleOption) => (
             <button
               aria-selected={activeRole === roleOption}
@@ -211,22 +208,24 @@ export function UsersPage() {
               role="tab"
               type="button"
             >
-              {formatRole(roleOption)}
+              {t(`roles.${roleOption}`)}
               <span>{roleCounts[roleOption]}</span>
             </button>
           ))}
         </div>
 
-        {isLoading ? <LoadingState message="Loading users..." /> : null}
+        {isLoading ? <LoadingState message={t("users.loading")} /> : null}
 
         {!isLoading && error && users.length === 0 ? (
-          <ErrorState message={error} title="Users unavailable" />
+          <ErrorState message={error} title={t("users.unavailableTitle")} />
         ) : null}
 
         {!isLoading && !error && visibleUsers.length === 0 ? (
           <EmptyState
-            message={`No ${formatRole(activeRole).toLowerCase()} users yet.`}
-            title="No users found"
+            message={t("users.emptyMessage", {
+              role: t(`roles.${activeRole}`).toLowerCase(),
+            })}
+            title={t("users.emptyTitle")}
           />
         ) : null}
 
@@ -240,19 +239,20 @@ export function UsersPage() {
                   <div>
                     <strong>{appUser.email}</strong>
                     <p className="muted">
-                      {formatRole(appUser.role)} · Created {formatDate(appUser.createdAt)}
+                      {t(`roles.${appUser.role}`)} - {t("common.created")}{" "}
+                      {formatDate(appUser.createdAt, i18n.language)}
                     </p>
                   </div>
 
                   {isCurrentUser ? (
-                    <span className="current-user-badge">Current user</span>
+                    <span className="current-user-badge">{t("common.currentUser")}</span>
                   ) : (
                     <button
                       className="danger-button"
                       onClick={() => setUserToDelete(appUser)}
                       type="button"
                     >
-                      Delete
+                      {t("common.delete")}
                     </button>
                   )}
                 </article>
@@ -265,9 +265,9 @@ export function UsersPage() {
       {userToDelete ? (
         <section className="danger-panel" aria-live="polite">
           <div>
-            <h2>Delete user?</h2>
+            <h2>{t("users.deleteTitle")}</h2>
             <p className="muted">
-              {userToDelete.email} will be removed from projects and unassigned from tasks.
+              {t("users.deleteMessage", { email: userToDelete.email })}
             </p>
           </div>
 
@@ -278,7 +278,7 @@ export function UsersPage() {
               onClick={() => setUserToDelete(null)}
               type="button"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               className="danger-button"
@@ -286,7 +286,7 @@ export function UsersPage() {
               onClick={handleDeleteUser}
               type="button"
             >
-              {isDeleting ? "Deleting..." : "Delete user"}
+              {isDeleting ? t("common.deleting") : t("users.deleteUser")}
             </button>
           </div>
         </section>
@@ -295,18 +295,14 @@ export function UsersPage() {
   );
 }
 
-function formatRole(role: UserRole) {
-  return role.charAt(0) + role.slice(1).toLowerCase();
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(date: string, language: string) {
+  return new Intl.DateTimeFormat(language, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).format(new Date(date));
 }
 
-function getUserErrorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : "Unable to manage users";
+function getUserErrorMessage(error: unknown, fallback: string) {
+  return error instanceof ApiError ? error.message : fallback;
 }

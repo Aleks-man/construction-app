@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 type StateViewProps = {
   action?: ReactNode;
@@ -21,7 +22,16 @@ export function EmptyState({ action, message, title }: StateViewProps) {
 }
 
 export function ErrorState({ action, message, title = "Something went wrong" }: StateViewProps) {
-  return <StateView action={action} message={message} title={title} tone="error" />;
+  const { t } = useTranslation();
+
+  return (
+    <StateView
+      action={action}
+      message={message}
+      title={title === "Something went wrong" ? t("state.somethingWrong") : title}
+      tone="error"
+    />
+  );
 }
 
 function StateView({ action, message, title, tone = "default" }: StateViewProps) {

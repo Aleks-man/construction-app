@@ -90,8 +90,8 @@ export function getTaskSummary(tasks: ProjectTask[]) {
   );
 }
 
-export function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", {
+export function formatDate(date: string, language = "en") {
+  return new Intl.DateTimeFormat(language, {
     day: "2-digit",
     month: "short",
     year: "numeric",

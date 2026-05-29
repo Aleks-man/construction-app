@@ -6,6 +6,12 @@ The project is built as a portfolio-grade full-stack application with role-based
 
 Live demo: https://construction-app-mauve.vercel.app
 
+Demo account:
+```txt
+email: admin@test.com
+password: DemoAdmin_2026_App_passW
+```
+
 ---
 
 ## Tech Stack
@@ -50,6 +56,7 @@ Backend:
 
 Frontend:
 - Protected authentication flow with login, token storage and redirect handling
+- English/Russian language switcher with persisted user preference
 - Shared dashboard layout with navigation, user role display and logout
 - Projects page with project creation, duplicate-name feedback and project cards
 - Project details page with project summary, stages, tasks and project members
@@ -305,7 +312,7 @@ FRONTEND_ORIGINS="https://your-frontend-domain.vercel.app"
 JWT_SECRET="replace-with-a-long-random-production-secret"
 JWT_EXPIRES_IN="1d"
 SEED_ADMIN_EMAIL="admin@test.com"
-SEED_ADMIN_PASSWORD="replace-with-a-demo-password"
+SEED_ADMIN_PASSWORD="DemoAdmin_2026_App_passW"
 ```
 
 The hosting platform usually provides `PORT` automatically in production.

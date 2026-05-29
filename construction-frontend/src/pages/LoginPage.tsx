@@ -1,7 +1,9 @@
 import { useState, type ComponentProps } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/auth-context";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 type LocationState = {
   from?: {
@@ -13,6 +15,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, login } = useAuth();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -36,7 +39,7 @@ export function LoginPage() {
       setError(
         loginError instanceof ApiError
           ? loginError.message
-          : "Unable to sign in. Please try again.",
+          : t("auth.error"),
       );
     } finally {
       setIsSubmitting(false);
@@ -46,22 +49,23 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-panel" aria-labelledby="login-title">
-        <div>
-          <p className="eyebrow">Construction Management</p>
-          <h1 id="login-title">Sign in to your workspace</h1>
-          <p className="muted">
-            Manage projects, stages, task owners, priorities and deadlines from one place.
-          </p>
+        <div className="auth-panel-header">
+          <div>
+            <p className="eyebrow">{t("auth.eyebrow")}</p>
+            <h1 id="login-title">{t("auth.title")}</h1>
+            <p className="muted">{t("auth.description")}</p>
+          </div>
+          <LanguageSwitcher />
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
-            Email
+            {t("auth.email")}
             <input
               autoComplete="email"
               name="email"
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
+              placeholder={t("auth.emailPlaceholder")}
               required
               type="email"
               value={email}
@@ -69,12 +73,12 @@ export function LoginPage() {
           </label>
 
           <label>
-            Password
+            {t("auth.password")}
             <input
               autoComplete="current-password"
               name="password"
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter password"
+              placeholder={t("auth.passwordPlaceholder")}
               required
               type="password"
               value={password}
@@ -84,7 +88,7 @@ export function LoginPage() {
           {error ? <p className="form-error">{error}</p> : null}
 
           <button disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? t("auth.submitting") : t("auth.submit")}
           </button>
         </form>
       </section>

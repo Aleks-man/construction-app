@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { getTasks, updateTaskStatus, type TaskWithDetails } from "../api/tasks";
 import type { TaskPriority, TaskStatus } from "../api/projects";
@@ -9,12 +10,12 @@ import {
   canUpdateTaskStatus,
   formatDate,
   getNextStatuses,
-  getStatusActionLabel,
   getTaskSummary,
 } from "./project-details-utils";
 
 export function MyTasksPage() {
   const { user } = useAuth();
+  const { i18n, t } = useTranslation();
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "ALL">("ALL");
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "ALL">("ALL");
@@ -46,7 +47,7 @@ export function MyTasksPage() {
         }
       } catch (tasksError) {
         if (isMounted) {
-          setError(getTasksErrorMessage(tasksError));
+          setError(getTasksErrorMessage(tasksError, t("tasks.loadError")));
         }
       } finally {
         if (isMounted) {
@@ -60,7 +61,7 @@ export function MyTasksPage() {
     return () => {
       isMounted = false;
     };
-  }, [isWorker, priorityFilter, statusFilter, user]);
+  }, [isWorker, priorityFilter, statusFilter, t, user]);
 
   async function handleUpdateTaskStatus(task: TaskWithDetails, status: TaskStatus) {
     setError("");
@@ -74,7 +75,7 @@ export function MyTasksPage() {
         ),
       );
     } catch (taskError) {
-      setError(getTasksErrorMessage(taskError));
+      setError(getTasksErrorMessage(taskError, t("tasks.loadError")));
     } finally {
       setUpdatingTaskId(null);
     }
@@ -87,89 +88,87 @@ export function MyTasksPage() {
   return (
     <main className="app-shell">
       <header className="page-heading">
-        <p className="eyebrow">Tasks</p>
-        <h1>{isWorker ? "My tasks" : "Team tasks"}</h1>
+        <p className="eyebrow">{t("tasks.eyebrow")}</p>
+        <h1>{isWorker ? t("tasks.myTitle") : t("tasks.teamTitle")}</h1>
         <p className="muted">
-          {isWorker
-            ? "Track assigned work and update task progress."
-            : "Review active work across projects and follow delivery risks."}
+          {isWorker ? t("tasks.myDescription") : t("tasks.teamDescription")}
         </p>
       </header>
 
       <section className="panel">
         <div className="section-heading">
           <div>
-            <h2>Work overview</h2>
-            <p className="muted">Scan task status, priority and upcoming due dates.</p>
+            <h2>{t("tasks.overviewTitle")}</h2>
+            <p className="muted">{t("tasks.overviewDescription")}</p>
           </div>
           <span className="counter-badge">{tasks.length}</span>
         </div>
 
         <dl className="task-summary-grid">
           <div>
-            <dt>New</dt>
+            <dt>{t("tasks.new")}</dt>
             <dd>{taskSummary.NEW}</dd>
           </div>
           <div>
-            <dt>In progress</dt>
+            <dt>{t("tasks.inProgress")}</dt>
             <dd>{taskSummary.IN_PROGRESS}</dd>
           </div>
           <div>
-            <dt>High priority</dt>
+            <dt>{t("tasks.highPriority")}</dt>
             <dd>{taskSummary.HIGH}</dd>
           </div>
           <div>
-            <dt>Due soon</dt>
+            <dt>{t("tasks.dueSoon")}</dt>
             <dd>{dueSoonCount}</dd>
           </div>
           <div>
-            <dt>Overdue</dt>
+            <dt>{t("tasks.overdue")}</dt>
             <dd>{overdueCount}</dd>
           </div>
         </dl>
 
         <div className="filters-row">
           <label>
-            Status
+            {t("tasks.status")}
             <select
               onChange={(event) => setStatusFilter(event.target.value as TaskStatus | "ALL")}
               value={statusFilter}
             >
-              <option value="ALL">All statuses</option>
-              <option value="NEW">New</option>
-              <option value="IN_PROGRESS">In progress</option>
-              <option value="DONE">Done</option>
+              <option value="ALL">{t("statuses.ALL")}</option>
+              <option value="NEW">{t("statuses.NEW")}</option>
+              <option value="IN_PROGRESS">{t("statuses.IN_PROGRESS")}</option>
+              <option value="DONE">{t("statuses.DONE")}</option>
             </select>
           </label>
 
           <label>
-            Priority
+            {t("tasks.priority")}
             <select
               onChange={(event) => setPriorityFilter(event.target.value as TaskPriority | "ALL")}
               value={priorityFilter}
             >
-              <option value="ALL">All priorities</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
+              <option value="ALL">{t("priorities.ALL")}</option>
+              <option value="LOW">{t("priorities.LOW")}</option>
+              <option value="MEDIUM">{t("priorities.MEDIUM")}</option>
+              <option value="HIGH">{t("priorities.HIGH")}</option>
             </select>
           </label>
         </div>
       </section>
 
-      {error ? <ErrorState message={error} title="Tasks unavailable" /> : null}
+      {error ? <ErrorState message={error} title={t("tasks.unavailable")} /> : null}
 
       <section className="tasks-board">
-        {isLoading ? <LoadingState message="Loading tasks..." /> : null}
+        {isLoading ? <LoadingState message={t("tasks.loading")} /> : null}
 
         {!isLoading && !error && tasks.length === 0 ? (
           <EmptyState
             message={
               isWorker
-                ? "No assigned tasks match the current filters."
-                : "No team tasks match the current filters."
+                ? t("tasks.emptyWorker")
+                : t("tasks.emptyTeam")
             }
-            title="No tasks found"
+            title={t("tasks.emptyTitle")}
           />
         ) : null}
 
@@ -181,14 +180,16 @@ export function MyTasksPage() {
                   <div className="task-row-title">
                     <h2>{task.title}</h2>
                     <span className={`status-pill status-${task.status.toLowerCase()}`}>
-                      {task.status}
+                      {t(`statuses.${task.status}`)}
                     </span>
                   </div>
                   {task.description ? <p className="muted">{task.description}</p> : null}
                   <div className="task-meta">
-                    <span>{task.priority}</span>
-                    <span>{task.dueDate ? formatDate(task.dueDate) : "No due date"}</span>
-                    <span>{task.assignee ? task.assignee.email : "Unassigned"}</span>
+                    <span>{t(`priorities.${task.priority}`)}</span>
+                    <span>
+                      {task.dueDate ? formatDate(task.dueDate, i18n.language) : t("tasks.noDueDate")}
+                    </span>
+                    <span>{task.assignee ? task.assignee.email : t("common.unassigned")}</span>
                   </div>
                 </div>
 
@@ -208,7 +209,7 @@ export function MyTasksPage() {
                         onClick={() => handleUpdateTaskStatus(task, status)}
                         type="button"
                       >
-                        {updatingTaskId === task.id ? "Updating..." : getStatusActionLabel(status)}
+                        {updatingTaskId === task.id ? t("common.updating") : t(`statusActions.${status}`)}
                       </button>
                     ))}
                   </div>
@@ -222,8 +223,8 @@ export function MyTasksPage() {
   );
 }
 
-function getTasksErrorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : "Unable to load tasks";
+function getTasksErrorMessage(error: unknown, fallback: string) {
+  return error instanceof ApiError ? error.message : fallback;
 }
 
 function isOverdue(task: TaskWithDetails) {

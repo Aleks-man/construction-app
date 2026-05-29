@@ -1,5 +1,6 @@
 import { useEffect, useState, type ComponentProps } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { createProject, getProjects, type Project } from "../api/projects";
 import { useAuth } from "../auth/auth-context";
@@ -7,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 
 export function ProjectsPage() {
   const { user } = useAuth();
+  const { i18n, t } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectName, setProjectName] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +29,7 @@ export function ProjectsPage() {
         }
       } catch (projectsError) {
         if (isMounted) {
-          setError(getProjectErrorMessage(projectsError));
+          setError(getProjectErrorMessage(projectsError, t("projects.loadError")));
         }
       } finally {
         if (isMounted) {
@@ -41,7 +43,7 @@ export function ProjectsPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   const handleCreateProject: ComponentProps<"form">["onSubmit"] = async (event) => {
     event.preventDefault();
@@ -60,7 +62,7 @@ export function ProjectsPage() {
       setProjects((currentProjects) => [createdProject, ...currentProjects]);
       setProjectName("");
     } catch (createError) {
-      setError(getProjectErrorMessage(createError));
+      setError(getProjectErrorMessage(createError, t("projects.loadError")));
     } finally {
       setIsCreating(false);
     }
@@ -69,30 +71,30 @@ export function ProjectsPage() {
   return (
     <main className="app-shell">
       <header className="page-heading">
-        <p className="eyebrow">Projects</p>
-        <h1>Construction workspace</h1>
-        <p className="muted">Plan projects, organize stages and track field work.</p>
+        <p className="eyebrow">{t("projects.eyebrow")}</p>
+        <h1>{t("projects.title")}</h1>
+        <p className="muted">{t("projects.description")}</p>
       </header>
 
       {canCreateProject ? (
         <section className="panel">
           <div>
-            <h2>Create project</h2>
-            <p className="muted">Start a construction project and organize stages and tasks.</p>
+            <h2>{t("projects.createTitle")}</h2>
+            <p className="muted">{t("projects.createDescription")}</p>
           </div>
 
           <form className="inline-form" onSubmit={handleCreateProject}>
             <label>
-              Project name
+              {t("projects.projectName")}
               <input
                 aria-describedby={error && !hasProjectLoadError ? "project-create-error" : undefined}
                 onChange={(event) => setProjectName(event.target.value)}
-                placeholder="Residential complex A"
+                placeholder={t("projects.projectNamePlaceholder")}
                 value={projectName}
               />
             </label>
             <button disabled={isCreating || !projectName.trim()} type="submit">
-              {isCreating ? "Creating..." : "Create"}
+              {isCreating ? t("common.creating") : t("common.create")}
             </button>
           </form>
         </section>
@@ -107,20 +109,22 @@ export function ProjectsPage() {
       <section className="projects-section">
         <div className="section-heading">
           <div>
-            <h2>Projects</h2>
-            <p className="muted">Track project teams, stages and active task progress.</p>
+            <h2>{t("projects.listTitle")}</h2>
+            <p className="muted">{t("projects.listDescription")}</p>
           </div>
           <span className="counter-badge">{projects.length}</span>
         </div>
 
-        {isLoading ? <LoadingState message="Loading projects..." /> : null}
+        {isLoading ? <LoadingState message={t("projects.loading")} /> : null}
 
-        {hasProjectLoadError ? <ErrorState message={error} title="Projects unavailable" /> : null}
+        {hasProjectLoadError ? (
+          <ErrorState message={error} title={t("projects.unavailable")} />
+        ) : null}
 
         {!isLoading && !error && projects.length === 0 ? (
           <EmptyState
-            message="Create the first project to begin planning stages, tasks and team assignments."
-            title="No projects yet"
+            message={t("projects.emptyMessage")}
+            title={t("projects.emptyTitle")}
           />
         ) : null}
 
@@ -129,22 +133,24 @@ export function ProjectsPage() {
             {projects.map((project) => (
               <Link className="project-card" key={project.id} to={`/projects/${project.id}`}>
                 <div>
-                  <p className="eyebrow">Project #{project.id}</p>
+                  <p className="eyebrow">{t("projects.cardEyebrow", { id: project.id })}</p>
                   <h3>{project.name}</h3>
-                  <p className="muted">Created {formatDate(project.createdAt)}</p>
+                  <p className="muted">
+                    {t("common.created")} {formatDate(project.createdAt, i18n.language)}
+                  </p>
                 </div>
 
                 <dl className="project-stats">
                   <div>
-                    <dt>Stages</dt>
+                    <dt>{t("projects.statsStages")}</dt>
                     <dd>{project.stages.length}</dd>
                   </div>
                   <div>
-                    <dt>Tasks</dt>
+                    <dt>{t("projects.statsTasks")}</dt>
                     <dd>{countProjectTasks(project)}</dd>
                   </div>
                   <div>
-                    <dt>Members</dt>
+                    <dt>{t("projects.statsMembers")}</dt>
                     <dd>{project.users.length}</dd>
                   </div>
                 </dl>
@@ -161,14 +167,14 @@ function countProjectTasks(project: Project) {
   return project.stages.reduce((tasksCount, stage) => tasksCount + stage.tasks.length, 0);
 }
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(date: string, language: string) {
+  return new Intl.DateTimeFormat(language, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).format(new Date(date));
 }
 
-function getProjectErrorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : "Unable to load projects";
+function getProjectErrorMessage(error: unknown, fallback: string) {
+  return error instanceof ApiError ? error.message : fallback;
 }

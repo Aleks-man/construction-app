@@ -1,6 +1,7 @@
 import { useState, type ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 import type { Project, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
-import { formatDate, getNextStatuses, getStatusActionLabel } from "./project-details-utils";
+import { formatDate, getNextStatuses } from "./project-details-utils";
 
 export function TaskCard({
   canManageTask,
@@ -25,6 +26,7 @@ export function TaskCard({
   onUpdateStatus: (status: TaskStatus) => void;
   task: ProjectTask;
 }) {
+  const { i18n, t } = useTranslation();
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [taskDraft, setTaskDraft] = useState<TaskEditDraft>(() => createTaskEditDraft(task));
@@ -53,7 +55,7 @@ export function TaskCard({
       {isEditingTask ? (
         <form className="task-edit-form" onSubmit={handleUpdateTask}>
           <label>
-            Task title
+            {t("tasks.title")}
             <input
               autoFocus
               onChange={(event) => setTaskDraft({ ...taskDraft, title: event.target.value })}
@@ -62,33 +64,33 @@ export function TaskCard({
           </label>
 
           <label>
-            Description
+            {t("tasks.description")}
             <input
               onChange={(event) =>
                 setTaskDraft({ ...taskDraft, description: event.target.value })
               }
-              placeholder="Optional details"
+              placeholder={t("tasks.descriptionPlaceholder")}
               value={taskDraft.description}
             />
           </label>
 
           <div className="task-form-grid">
             <label>
-              Priority
+              {t("tasks.priority")}
               <select
                 onChange={(event) =>
                   setTaskDraft({ ...taskDraft, priority: event.target.value as TaskPriority })
                 }
                 value={taskDraft.priority}
               >
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
+                <option value="LOW">{t("priorities.LOW")}</option>
+                <option value="MEDIUM">{t("priorities.MEDIUM")}</option>
+                <option value="HIGH">{t("priorities.HIGH")}</option>
               </select>
             </label>
 
             <label>
-              Due date
+              {t("tasks.dueDate")}
               <input
                 onChange={(event) => setTaskDraft({ ...taskDraft, dueDate: event.target.value })}
                 type="date"
@@ -98,15 +100,15 @@ export function TaskCard({
           </div>
 
           <label>
-            Assignee
+            {t("tasks.assignee")}
             <select
               onChange={(event) => setTaskDraft({ ...taskDraft, assigneeId: event.target.value })}
               value={taskDraft.assigneeId}
             >
-              <option value="">Unassigned</option>
+              <option value="">{t("common.unassigned")}</option>
               {members.map((member) => (
                 <option key={member.userId} value={member.userId}>
-                  {member.user.email} ({member.user.role})
+                  {member.user.email} ({t(`roles.${member.user.role}`)})
                 </option>
               ))}
             </select>
@@ -122,10 +124,10 @@ export function TaskCard({
               }}
               type="button"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button disabled={isSaving || !taskDraft.title.trim()} type="submit">
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </form>
@@ -134,23 +136,23 @@ export function TaskCard({
           <div className="task-card-header">
             <h3>{task.title}</h3>
             <span className={`status-pill status-${task.status.toLowerCase()}`}>
-              {task.status}
+              {t(`statuses.${task.status}`)}
             </span>
           </div>
 
           {task.description ? <p className="muted">{task.description}</p> : null}
 
           <div className="task-meta">
-            <span>{task.priority}</span>
-            <span>{task.dueDate ? formatDate(task.dueDate) : "No due date"}</span>
-            <span>{getAssigneeLabel(task, members)}</span>
+            <span>{t(`priorities.${task.priority}`)}</span>
+            <span>{task.dueDate ? formatDate(task.dueDate, i18n.language) : t("tasks.noDueDate")}</span>
+            <span>{getAssigneeLabel(task, members, t("common.unassigned"))}</span>
           </div>
         </>
       )}
 
       {isConfirmingDelete ? (
         <div className="task-delete-confirm">
-          <p className="muted">Delete this task permanently?</p>
+          <p className="muted">{t("tasks.deleteConfirm")}</p>
           <div className="compact-actions">
             <button
               className="secondary-button"
@@ -158,7 +160,7 @@ export function TaskCard({
               onClick={() => setIsConfirmingDelete(false)}
               type="button"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               className="danger-button"
@@ -166,7 +168,7 @@ export function TaskCard({
               onClick={handleDeleteTask}
               type="button"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("common.deleting") : t("common.delete")}
             </button>
           </div>
         </div>
@@ -182,7 +184,7 @@ export function TaskCard({
             }}
             type="button"
           >
-            Edit
+            {t("common.edit")}
           </button>
           <button
             className="danger-action-button"
@@ -193,7 +195,7 @@ export function TaskCard({
             }}
             type="button"
           >
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       ) : null}
@@ -207,7 +209,7 @@ export function TaskCard({
               onClick={() => onUpdateStatus(status)}
               type="button"
             >
-              {getStatusActionLabel(status)}
+              {t(`statusActions.${status}`)}
             </button>
           ))}
         </div>
@@ -234,9 +236,9 @@ function createTaskEditDraft(task: ProjectTask): TaskEditDraft {
   };
 }
 
-function getAssigneeLabel(task: ProjectTask, members: Project["users"]) {
+function getAssigneeLabel(task: ProjectTask, members: Project["users"], unassignedLabel: string) {
   if (!task.assigneeId) {
-    return "Unassigned";
+    return unassignedLabel;
   }
 
   const assignee = members.find((member) => member.userId === task.assigneeId);
