@@ -19,6 +19,7 @@ import { createTask, deleteTask, updateTask, updateTaskStatus } from "../api/tas
 import { createUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { PasswordInput } from "../components/PasswordInput";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { StageColumn } from "./StageColumn";
 import type { TaskEditDraft } from "./TaskCard";
@@ -823,7 +824,8 @@ export function ProjectDetailsPage() {
 
               <label>
                 {t("projectDetails.password")}
-                <input
+                <PasswordInput
+                  autoComplete="new-password"
                   onChange={(event) =>
                     setNewUserDraft((currentDraft) => ({
                       ...currentDraft,
@@ -831,7 +833,6 @@ export function ProjectDetailsPage() {
                     }))
                   }
                   placeholder={t("projectDetails.passwordPlaceholder")}
-                  type="password"
                   value={newUserDraft.password}
                 />
               </label>

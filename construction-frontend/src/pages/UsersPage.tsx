@@ -4,6 +4,7 @@ import { ApiError } from "../api/client";
 import { createUser, deleteUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { PasswordInput } from "../components/PasswordInput";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
@@ -159,13 +160,12 @@ export function UsersPage() {
 
           <label>
             {t("users.password")}
-            <input
+            <PasswordInput
               autoComplete="new-password"
               minLength={6}
               onChange={(event) => setPassword(event.target.value)}
               placeholder={t("users.passwordPlaceholder")}
               required
-              type="password"
               value={password}
             />
           </label>

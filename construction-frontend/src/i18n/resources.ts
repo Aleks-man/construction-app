@@ -24,7 +24,9 @@ export const resources = {
         system: "System",
         created: "Created",
         currentUser: "Current user",
+        hidePassword: "Hide password",
         language: "Language",
+        showPassword: "Show password",
       },
       nav: {
         projects: "Projects",
@@ -235,7 +237,9 @@ export const resources = {
         system: "Система",
         created: "Создано",
         currentUser: "Текущий пользователь",
+        hidePassword: "Скрыть пароль",
         language: "Язык",
+        showPassword: "Показать пароль",
       },
       nav: {
         projects: "Проекты",

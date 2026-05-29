@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/auth-context";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { PasswordInput } from "../components/PasswordInput";
 
 type LocationState = {
   from?: {
@@ -74,13 +75,12 @@ export function LoginPage() {
 
           <label>
             {t("auth.password")}
-            <input
+            <PasswordInput
               autoComplete="current-password"
               name="password"
               onChange={(event) => setPassword(event.target.value)}
               placeholder={t("auth.passwordPlaceholder")}
               required
-              type="password"
               value={password}
             />
           </label>

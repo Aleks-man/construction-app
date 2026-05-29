@@ -140,6 +140,40 @@ select:focus {
   outline: none;
 }
 
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 46px;
+}
+
+.password-toggle {
+  align-items: center;
+  background: transparent;
+  border-radius: 6px;
+  color: #667085;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+}
+
+.password-toggle:hover {
+  background: #eef4f3;
+  color: #1f5f5b;
+}
+
+.password-toggle:focus-visible {
+  box-shadow: 0 0 0 3px rgba(36, 116, 111, 0.14);
+  outline: none;
+}
+
 .auth-form button,
 .secondary-button {
   align-items: center;
