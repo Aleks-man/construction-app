@@ -16,7 +16,7 @@ export function PasswordInput(props: PasswordInputProps) {
         onClick={() => setIsVisible((currentValue) => !currentValue)}
         type="button"
       >
-        {isVisible ? <EyeOffIcon /> : <EyeIcon />}
+        {isVisible ? <EyeIcon /> : <EyeOffIcon />}
       </button>
     </div>
   );
@@ -26,18 +26,18 @@ function EyeIcon() {
   return (
     <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
       <path
-        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        d="M2.5 12s3.5-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.5 5.5-9.5 5.5S2.5 12 2.5 12Z"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="1.6"
       />
       <path
-        d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+        d="M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4Z"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="1.6"
       />
     </svg>
   );
@@ -47,32 +47,25 @@ function EyeOffIcon() {
   return (
     <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
       <path
-        d="m3 3 18 18"
+        d="M2.5 12s3.5-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.5 5.5-9.5 5.5S2.5 12 2.5 12Z"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="1.6"
       />
       <path
-        d="M10.6 10.6A2 2 0 0 0 13.4 13.4"
+        d="M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4Z"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="1.6"
       />
       <path
-        d="M7.1 7.5C4.2 9.2 2.5 12 2.5 12s3.5 6 9.5 6c1.7 0 3.2-.5 4.5-1.2"
+        d="m4.5 19.5 15-15"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M21.5 12s-3.5-6-9.5-6c-.8 0-1.6.1-2.3.3"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="1.6"
       />
     </svg>
   );

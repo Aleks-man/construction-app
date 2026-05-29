@@ -145,36 +145,38 @@ select:focus {
 }
 
 .password-input-wrap input {
-  padding-right: 46px;
+  padding-right: 42px;
 }
 
-.password-toggle {
+.password-input-wrap .password-toggle {
   align-items: center;
   background: transparent;
-  border-radius: 6px;
-  color: #667085;
+  border-radius: 0;
+  color: #98a2b3;
   display: inline-flex;
-  height: 34px;
+  height: 24px;
   justify-content: center;
   padding: 0;
   position: absolute;
-  right: 6px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
+  transition: color 140ms ease;
+  width: 24px;
 }
 
-.password-toggle:hover {
-  background: #eef4f3;
+.password-input-wrap .password-toggle:hover {
+  background: transparent;
   color: #1f5f5b;
 }
 
-.password-toggle:focus-visible {
-  box-shadow: 0 0 0 3px rgba(36, 116, 111, 0.14);
+.password-input-wrap .password-toggle:focus-visible {
+  background: transparent;
+  color: #1f5f5b;
   outline: none;
 }
 
-.auth-form button,
+.auth-form button:not(.password-toggle),
 .secondary-button {
   align-items: center;
   background: #24746f;
@@ -1286,7 +1288,7 @@ select:focus {
   }
 
   .user-menu button,
-  .auth-form button,
+  .auth-form button:not(.password-toggle),
   .inline-form button,
   .member-form button,
   .task-create-form button {
