@@ -6,6 +6,12 @@ The project is built as a portfolio-grade full-stack application with role-based
 
 Live demo: https://construction-app-mauve.vercel.app
 
+Demo account:
+```txt
+email: admin@test.com
+password: DemoAdmin_2026_App_passW
+```
+
 ---
 
 ## Tech Stack
