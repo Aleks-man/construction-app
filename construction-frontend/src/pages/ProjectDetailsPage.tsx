@@ -18,6 +18,7 @@ import { createStage, deleteStage, updateStage } from "../api/stages";
 import { createTask, deleteTask, updateTask, updateTaskStatus } from "../api/tasks";
 import { createUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { StageColumn } from "./StageColumn";
 import type { TaskEditDraft } from "./TaskCard";
@@ -641,33 +642,17 @@ export function ProjectDetailsPage() {
         </div>
       </header>
 
-      {isConfirmingDelete ? (
-        <section className="danger-panel">
-          <div>
-            <h2>{t("projectDetails.deleteProjectTitle")}</h2>
-            <p className="muted">{t("projectDetails.deleteProjectMessage")}</p>
-          </div>
-
-          <div className="danger-actions">
-            <button
-              className="secondary-button"
-              disabled={isDeletingProject}
-              onClick={() => setIsConfirmingDelete(false)}
-              type="button"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              className="danger-button"
-              disabled={isDeletingProject}
-              onClick={handleDeleteProject}
-              type="button"
-            >
-              {isDeletingProject ? t("common.deleting") : t("projectDetails.deletePermanently")}
-            </button>
-          </div>
-        </section>
-      ) : null}
+      <ConfirmDialog
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("projectDetails.deletePermanently")}
+        confirmingLabel={t("common.deleting")}
+        isConfirming={isDeletingProject}
+        isOpen={isConfirmingDelete}
+        message={t("projectDetails.deleteProjectMessage")}
+        onCancel={() => setIsConfirmingDelete(false)}
+        onConfirm={handleDeleteProject}
+        title={t("projectDetails.deleteProjectTitle")}
+      />
 
       <section className="panel">
         <div className="section-heading">

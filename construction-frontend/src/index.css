@@ -717,32 +717,103 @@ select:focus {
   padding: 8px 12px;
 }
 
-.danger-panel {
+.confirm-dialog-backdrop {
   align-items: center;
-  background: #fffafa;
-  border: 1px solid #ffccc7;
-  border-radius: 8px;
+  background: rgba(16, 24, 32, 0.52);
   display: flex;
-  gap: 20px;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  inset: 0;
+  justify-content: center;
   padding: 20px;
+  position: fixed;
+  z-index: 50;
 }
 
-.danger-panel h2 {
-  margin-bottom: 6px;
+.confirm-dialog-open {
+  animation: dialog-backdrop-in 160ms ease-out both;
 }
 
-.danger-actions {
+.confirm-dialog-closing {
+  animation: dialog-backdrop-out 160ms ease-in both;
+}
+
+.confirm-dialog {
+  background: #ffffff;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(16, 24, 32, 0.22);
+  display: grid;
+  gap: 24px;
+  max-width: 460px;
+  padding: 24px;
+  width: 100%;
+}
+
+.confirm-dialog-open .confirm-dialog {
+  animation: dialog-panel-in 180ms ease-out both;
+}
+
+.confirm-dialog-closing .confirm-dialog {
+  animation: dialog-panel-out 160ms ease-in both;
+}
+
+.confirm-dialog h2 {
+  margin-bottom: 8px;
+}
+
+.confirm-dialog-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
 }
 
-.danger-actions .danger-button {
+.confirm-dialog-actions button {
   min-height: 44px;
   padding: 10px 14px;
+}
+
+@keyframes dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-backdrop-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialog-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
 }
 
 .team-management {
@@ -913,8 +984,7 @@ select:focus {
   color: #a8071a;
 }
 
-.stage-edit-form,
-.stage-delete-confirm {
+.stage-edit-form {
   background: #f6f7f9;
   border: 1px solid #e7ebef;
   border-radius: 8px;
@@ -926,11 +996,6 @@ select:focus {
 
 .stage-edit-form {
   flex: 1;
-}
-
-.stage-delete-confirm {
-  background: #fffafa;
-  border-color: #ffccc7;
 }
 
 .tasks-list {
@@ -1063,17 +1128,9 @@ select:focus {
   font-size: 13px;
 }
 
-.task-edit-form,
-.task-delete-confirm {
+.task-edit-form {
   display: grid;
   gap: 12px;
-}
-
-.task-delete-confirm {
-  background: #fffafa;
-  border: 1px solid #ffccc7;
-  border-radius: 8px;
-  padding: 12px;
 }
 
 .task-create-form {
@@ -1246,19 +1303,6 @@ select:focus {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .danger-panel {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .danger-actions {
-    justify-content: stretch;
-  }
-
-  .danger-actions button {
-    flex: 1;
-  }
-
   .activity-item {
     align-items: flex-start;
     flex-direction: column;
@@ -1320,7 +1364,7 @@ select:focus {
   }
 
   .compact-actions,
-  .danger-actions,
+  .confirm-dialog-actions,
   .task-actions,
   .stage-actions {
     display: grid;
@@ -1328,7 +1372,7 @@ select:focus {
   }
 
   .compact-actions button,
-  .danger-actions button,
+  .confirm-dialog-actions button,
   .task-actions button,
   .stage-actions button,
   .secondary-button,

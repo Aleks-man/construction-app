@@ -1,6 +1,7 @@
 import { useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatDate, getNextStatuses } from "./project-details-utils";
 
 export function TaskCard({
@@ -150,29 +151,17 @@ export function TaskCard({
         </>
       )}
 
-      {isConfirmingDelete ? (
-        <div className="task-delete-confirm">
-          <p className="muted">{t("tasks.deleteConfirm")}</p>
-          <div className="compact-actions">
-            <button
-              className="secondary-button"
-              disabled={isDeleting}
-              onClick={() => setIsConfirmingDelete(false)}
-              type="button"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              className="danger-button"
-              disabled={isDeleting}
-              onClick={handleDeleteTask}
-              type="button"
-            >
-              {isDeleting ? t("common.deleting") : t("common.delete")}
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmDialog
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("common.delete")}
+        confirmingLabel={t("common.deleting")}
+        isConfirming={isDeleting}
+        isOpen={isConfirmingDelete}
+        message={t("tasks.deleteConfirm")}
+        onCancel={() => setIsConfirmingDelete(false)}
+        onConfirm={handleDeleteTask}
+        title={t("tasks.deleteTitle")}
+      />
 
       {canManageTask && !isEditingTask ? (
         <div className="task-actions">

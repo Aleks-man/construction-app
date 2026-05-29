@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { createUser, deleteUser, getUsers, type AppUser, type UserRole } from "../api/users";
 import { useAuth } from "../auth/auth-context";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
@@ -262,35 +263,17 @@ export function UsersPage() {
         ) : null}
       </section>
 
-      {userToDelete ? (
-        <section className="danger-panel" aria-live="polite">
-          <div>
-            <h2>{t("users.deleteTitle")}</h2>
-            <p className="muted">
-              {t("users.deleteMessage", { email: userToDelete.email })}
-            </p>
-          </div>
-
-          <div className="danger-actions">
-            <button
-              className="secondary-button"
-              disabled={isDeleting}
-              onClick={() => setUserToDelete(null)}
-              type="button"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              className="danger-button"
-              disabled={isDeleting}
-              onClick={handleDeleteUser}
-              type="button"
-            >
-              {isDeleting ? t("common.deleting") : t("users.deleteUser")}
-            </button>
-          </div>
-        </section>
-      ) : null}
+      <ConfirmDialog
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("users.deleteUser")}
+        confirmingLabel={t("common.deleting")}
+        isConfirming={isDeleting}
+        isOpen={Boolean(userToDelete)}
+        message={userToDelete ? t("users.deleteMessage", { email: userToDelete.email }) : ""}
+        onCancel={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        title={t("users.deleteTitle")}
+      />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectStage, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import {
   canUpdateTaskStatus,
   filterTasks,
@@ -152,29 +153,17 @@ export function StageColumn({
         )}
       </div>
 
-      {isConfirmingDelete ? (
-        <div className="stage-delete-confirm">
-          <p className="muted">{t("stage.deleteConfirm")}</p>
-          <div className="compact-actions">
-            <button
-              className="secondary-button"
-              disabled={isDeletingStage}
-              onClick={() => setIsConfirmingDelete(false)}
-              type="button"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              className="danger-button"
-              disabled={isDeletingStage}
-              onClick={handleDeleteStage}
-              type="button"
-            >
-              {isDeletingStage ? t("common.deleting") : t("common.delete")}
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmDialog
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("common.delete")}
+        confirmingLabel={t("common.deleting")}
+        isConfirming={isDeletingStage}
+        isOpen={isConfirmingDelete}
+        message={t("stage.deleteConfirm")}
+        onCancel={() => setIsConfirmingDelete(false)}
+        onConfirm={handleDeleteStage}
+        title={t("stage.deleteTitle")}
+      />
 
       {visibleStageTasks.length > 0 ? (
         <div className="tasks-list">

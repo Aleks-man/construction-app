@@ -137,6 +137,7 @@ export const resources = {
       },
       stage: {
         name: "Stage name",
+        deleteTitle: "Delete stage?",
         deleteConfirm: "Delete this stage and all its tasks?",
         noFilteredTasks: "No tasks match the filters.",
         noTasks: "No tasks in this stage.",
@@ -173,6 +174,7 @@ export const resources = {
         assignee: "Assignee",
         createPlaceholder: "Task for {{stage}}",
         addTask: "Add task",
+        deleteTitle: "Delete task?",
         deleteConfirm: "Delete this task permanently?",
       },
       users: {
@@ -347,6 +349,7 @@ export const resources = {
       },
       stage: {
         name: "Название этапа",
+        deleteTitle: "Удалить этап?",
         deleteConfirm: "Удалить этот этап и все его задачи?",
         noFilteredTasks: "Нет задач под выбранные фильтры.",
         noTasks: "В этом этапе пока нет задач.",
@@ -382,6 +385,7 @@ export const resources = {
         assignee: "Исполнитель",
         createPlaceholder: "Задача для этапа {{stage}}",
         addTask: "Добавить задачу",
+        deleteTitle: "Удалить задачу?",
         deleteConfirm: "Удалить эту задачу навсегда?",
       },
       users: {
