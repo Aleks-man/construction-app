@@ -4,6 +4,8 @@ Full-stack construction project management application for organizing projects, 
 
 The project is built as a portfolio-grade full-stack application with role-based access, JWT authentication, PostgreSQL persistence and a React dashboard for day-to-day project work.
 
+Live demo: https://construction-app-mauve.vercel.app
+
 ---
 
 ## Tech Stack
