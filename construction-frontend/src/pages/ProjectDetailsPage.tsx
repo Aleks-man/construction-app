@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/client";
 import { addProjectUser, removeProjectUser } from "../api/project-users";
 import {
@@ -33,6 +34,7 @@ export function ProjectDetailsPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { i18n, t } = useTranslation();
   const [project, setProject] = useState<Project | null>(null);
   const [activityLogs, setActivityLogs] = useState<ProjectActivityLog[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -77,7 +79,7 @@ export function ProjectDetailsPage() {
 
     async function loadProject() {
       if (!Number.isInteger(parsedProjectId) || parsedProjectId <= 0) {
-        setProjectLoadError("Project id is invalid");
+        setProjectLoadError(t("projectDetails.invalidId"));
         setIsLoading(false);
         return;
       }
@@ -94,7 +96,7 @@ export function ProjectDetailsPage() {
         }
       } catch (projectError) {
         if (isMounted) {
-          setProjectLoadError(getProjectErrorMessage(projectError));
+          setProjectLoadError(getProjectErrorMessage(projectError, t("projectDetails.unavailableMessage")));
         }
       } finally {
         if (isMounted) {
@@ -108,7 +110,7 @@ export function ProjectDetailsPage() {
     return () => {
       isMounted = false;
     };
-  }, [parsedProjectId]);
+  }, [parsedProjectId, t]);
 
   async function refreshProjectActivity(projectIdToRefresh: number) {
     setIsLoadingActivity(true);
@@ -117,7 +119,7 @@ export function ProjectDetailsPage() {
       const activityResponse = await getProjectActivity(projectIdToRefresh);
       setActivityLogs(activityResponse);
     } catch (activityError) {
-      setError(getProjectErrorMessage(activityError));
+      setError(getProjectErrorMessage(activityError, t("projectDetails.unavailableMessage")));
     } finally {
       setIsLoadingActivity(false);
     }
@@ -147,7 +149,7 @@ export function ProjectDetailsPage() {
         }
       } catch (usersError) {
         if (isMounted) {
-          setError(getProjectErrorMessage(usersError));
+          setError(getProjectErrorMessage(usersError, t("users.loadError")));
         }
       } finally {
         if (isMounted) {
@@ -161,7 +163,7 @@ export function ProjectDetailsPage() {
     return () => {
       isMounted = false;
     };
-  }, [canCreateUsers]);
+  }, [canCreateUsers, t]);
 
   const handleCreateStage: ComponentProps<"form">["onSubmit"] = async (event) => {
     event.preventDefault();
@@ -188,7 +190,7 @@ export function ProjectDetailsPage() {
       setStageName("");
       await refreshProjectActivity(project.id);
     } catch (stageError) {
-      setError(getProjectErrorMessage(stageError));
+      setError(getProjectErrorMessage(stageError, t("projectDetails.unavailableMessage")));
     } finally {
       setIsCreatingStage(false);
     }
@@ -231,7 +233,7 @@ export function ProjectDetailsPage() {
       }));
       await refreshProjectActivity(project.id);
     } catch (taskError) {
-      setError(getProjectErrorMessage(taskError));
+      setError(getProjectErrorMessage(taskError, t("tasks.loadError")));
     } finally {
       setCreatingTaskStageId(null);
     }
@@ -270,7 +272,7 @@ export function ProjectDetailsPage() {
       setSelectedMemberId(String(createdUser.id));
       setNewUserDraft(createEmptyUserDraft());
     } catch (userError) {
-      setError(getProjectErrorMessage(userError));
+      setError(getProjectErrorMessage(userError, t("users.loadError")));
     } finally {
       setIsCreatingUser(false);
     }
@@ -298,7 +300,7 @@ export function ProjectDetailsPage() {
       setSelectedMemberId("");
       await refreshProjectActivity(project.id);
     } catch (memberError) {
-      setError(getProjectErrorMessage(memberError));
+      setError(getProjectErrorMessage(memberError, t("projectDetails.unavailableMessage")));
     } finally {
       setIsAddingMember(false);
     }
@@ -320,7 +322,7 @@ export function ProjectDetailsPage() {
       });
       await refreshProjectActivity(project.id);
     } catch (memberError) {
-      setError(getProjectErrorMessage(memberError));
+      setError(getProjectErrorMessage(memberError, t("projectDetails.unavailableMessage")));
     } finally {
       setRemovingMemberId(null);
     }
@@ -347,7 +349,7 @@ export function ProjectDetailsPage() {
       });
       await refreshProjectActivity(project.id);
     } catch (taskError) {
-      setError(getProjectErrorMessage(taskError));
+      setError(getProjectErrorMessage(taskError, t("tasks.loadError")));
     } finally {
       setUpdatingTaskId(null);
     }
@@ -379,7 +381,7 @@ export function ProjectDetailsPage() {
       await refreshProjectActivity(project.id);
       return true;
     } catch (taskUpdateError) {
-      setError(getProjectErrorMessage(taskUpdateError));
+      setError(getProjectErrorMessage(taskUpdateError, t("tasks.loadError")));
       return false;
     } finally {
       setSavingTaskId(null);
@@ -407,7 +409,7 @@ export function ProjectDetailsPage() {
       await refreshProjectActivity(project.id);
       return true;
     } catch (taskDeleteError) {
-      setError(getProjectErrorMessage(taskDeleteError));
+      setError(getProjectErrorMessage(taskDeleteError, t("tasks.loadError")));
       return false;
     } finally {
       setDeletingTaskId(null);
@@ -439,7 +441,7 @@ export function ProjectDetailsPage() {
       setIsEditingProjectName(false);
       await refreshProjectActivity(updatedProject.id);
     } catch (projectUpdateError) {
-      setError(getProjectErrorMessage(projectUpdateError));
+      setError(getProjectErrorMessage(projectUpdateError, t("projectDetails.unavailableMessage")));
     } finally {
       setIsUpdatingProjectName(false);
     }
@@ -464,7 +466,7 @@ export function ProjectDetailsPage() {
       await refreshProjectActivity(project.id);
       return true;
     } catch (stageUpdateError) {
-      setError(getProjectErrorMessage(stageUpdateError));
+      setError(getProjectErrorMessage(stageUpdateError, t("projectDetails.unavailableMessage")));
       return false;
     } finally {
       setUpdatingStageId(null);
@@ -493,7 +495,7 @@ export function ProjectDetailsPage() {
       await refreshProjectActivity(project.id);
       return true;
     } catch (stageDeleteError) {
-      setError(getProjectErrorMessage(stageDeleteError));
+      setError(getProjectErrorMessage(stageDeleteError, t("projectDetails.unavailableMessage")));
       return false;
     } finally {
       setDeletingStageId(null);
@@ -512,7 +514,7 @@ export function ProjectDetailsPage() {
       await deleteProject(project.id);
       navigate("/projects", { replace: true });
     } catch (deleteError) {
-      setError(getProjectErrorMessage(deleteError));
+      setError(getProjectErrorMessage(deleteError, t("projectDetails.unavailableMessage")));
       setIsDeletingProject(false);
     }
   }
@@ -520,7 +522,7 @@ export function ProjectDetailsPage() {
   if (isLoading) {
     return (
       <main className="app-shell">
-        <LoadingState message="Loading project..." />
+        <LoadingState message={t("projectDetails.loading")} />
       </main>
     );
   }
@@ -529,11 +531,11 @@ export function ProjectDetailsPage() {
     return (
       <main className="app-shell">
         <Link className="text-link" to="/projects">
-          Back to projects
+          {t("projectDetails.back")}
         </Link>
         <ErrorState
-          message={projectLoadError || "Unable to load project"}
-          title="Project unavailable"
+          message={projectLoadError || t("projectDetails.unavailableMessage")}
+          title={t("projectDetails.unavailableTitle")}
         />
       </main>
     );
@@ -549,16 +551,16 @@ export function ProjectDetailsPage() {
   return (
     <main className="app-shell">
       <Link className="text-link" to="/projects">
-        Back to projects
+        {t("projectDetails.back")}
       </Link>
 
       <header className="project-hero">
         <div>
-          <p className="eyebrow">Project #{project.id}</p>
+          <p className="eyebrow">{t("projectDetails.projectEyebrow", { id: project.id })}</p>
           {isEditingProjectName ? (
             <form className="project-edit-form" onSubmit={handleUpdateProjectName}>
               <label>
-                Project name
+                {t("projectDetails.projectName")}
                 <input
                   aria-describedby={error ? "project-action-error" : undefined}
                   autoFocus
@@ -577,13 +579,13 @@ export function ProjectDetailsPage() {
                   }}
                   type="button"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   disabled={isUpdatingProjectName || !projectNameDraft.trim()}
                   type="submit"
                 >
-                  {isUpdatingProjectName ? "Saving..." : "Save"}
+                  {isUpdatingProjectName ? t("common.saving") : t("common.save")}
                 </button>
               </div>
             </form>
@@ -600,26 +602,28 @@ export function ProjectDetailsPage() {
                   }}
                   type="button"
                 >
-                  Edit
+                  {t("common.edit")}
                 </button>
               ) : null}
             </div>
           )}
-          <p className="muted">Created {formatDate(project.createdAt)}</p>
+          <p className="muted">
+            {t("common.created")} {formatDate(project.createdAt, i18n.language)}
+          </p>
         </div>
 
         <div className="project-hero-side">
           <dl className="summary-grid">
             <div>
-              <dt>Stages</dt>
+              <dt>{t("projects.statsStages")}</dt>
               <dd>{project.stages.length}</dd>
             </div>
             <div>
-              <dt>Tasks</dt>
+              <dt>{t("projects.statsTasks")}</dt>
               <dd>{tasks.length}</dd>
             </div>
             <div>
-              <dt>Members</dt>
+              <dt>{t("projects.statsMembers")}</dt>
               <dd>{project.users.length}</dd>
             </div>
           </dl>
@@ -631,7 +635,7 @@ export function ProjectDetailsPage() {
               onClick={() => setIsConfirmingDelete(true)}
               type="button"
             >
-              Delete project
+              {t("projectDetails.deleteProject")}
             </button>
           ) : null}
         </div>
@@ -640,10 +644,8 @@ export function ProjectDetailsPage() {
       {isConfirmingDelete ? (
         <section className="danger-panel">
           <div>
-            <h2>Delete project?</h2>
-            <p className="muted">
-              This will permanently remove the project, its stages, tasks and team assignments.
-            </p>
+            <h2>{t("projectDetails.deleteProjectTitle")}</h2>
+            <p className="muted">{t("projectDetails.deleteProjectMessage")}</p>
           </div>
 
           <div className="danger-actions">
@@ -653,7 +655,7 @@ export function ProjectDetailsPage() {
               onClick={() => setIsConfirmingDelete(false)}
               type="button"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               className="danger-button"
@@ -661,7 +663,7 @@ export function ProjectDetailsPage() {
               onClick={handleDeleteProject}
               type="button"
             >
-              {isDeletingProject ? "Deleting..." : "Delete permanently"}
+              {isDeletingProject ? t("common.deleting") : t("projectDetails.deletePermanently")}
             </button>
           </div>
         </section>
@@ -670,57 +672,57 @@ export function ProjectDetailsPage() {
       <section className="panel">
         <div className="section-heading">
           <div>
-            <h2>Task overview</h2>
-            <p className="muted">Filter work by current status and priority.</p>
+            <h2>{t("projectDetails.taskOverview")}</h2>
+            <p className="muted">{t("projectDetails.taskOverviewDescription")}</p>
           </div>
           <span className="counter-badge">{visibleTasks.length}</span>
         </div>
 
         <dl className="task-summary-grid">
           <div>
-            <dt>New</dt>
+            <dt>{t("tasks.new")}</dt>
             <dd>{taskSummary.NEW}</dd>
           </div>
           <div>
-            <dt>In progress</dt>
+            <dt>{t("tasks.inProgress")}</dt>
             <dd>{taskSummary.IN_PROGRESS}</dd>
           </div>
           <div>
-            <dt>Done</dt>
+            <dt>{t("tasks.done")}</dt>
             <dd>{taskSummary.DONE}</dd>
           </div>
           <div>
-            <dt>High priority</dt>
+            <dt>{t("tasks.highPriority")}</dt>
             <dd>{taskSummary.HIGH}</dd>
           </div>
         </dl>
 
         <div className="filters-row">
           <label>
-            Status
+            {t("projectDetails.status")}
             <select
               onChange={(event) => setTaskStatusFilter(event.target.value as TaskStatus | "ALL")}
               value={taskStatusFilter}
             >
-              <option value="ALL">All statuses</option>
-              <option value="NEW">New</option>
-              <option value="IN_PROGRESS">In progress</option>
-              <option value="DONE">Done</option>
+              <option value="ALL">{t("statuses.ALL")}</option>
+              <option value="NEW">{t("statuses.NEW")}</option>
+              <option value="IN_PROGRESS">{t("statuses.IN_PROGRESS")}</option>
+              <option value="DONE">{t("statuses.DONE")}</option>
             </select>
           </label>
 
           <label>
-            Priority
+            {t("projectDetails.priority")}
             <select
               onChange={(event) =>
                 setTaskPriorityFilter(event.target.value as TaskPriority | "ALL")
               }
               value={taskPriorityFilter}
             >
-              <option value="ALL">All priorities</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
+              <option value="ALL">{t("priorities.ALL")}</option>
+              <option value="LOW">{t("priorities.LOW")}</option>
+              <option value="MEDIUM">{t("priorities.MEDIUM")}</option>
+              <option value="HIGH">{t("priorities.HIGH")}</option>
             </select>
           </label>
         </div>
@@ -729,16 +731,16 @@ export function ProjectDetailsPage() {
       <section className="panel">
         <div className="section-heading">
           <div>
-            <h2>Activity</h2>
-            <p className="muted">Recent project changes and team actions.</p>
+            <h2>{t("projectDetails.activity")}</h2>
+            <p className="muted">{t("projectDetails.activityDescription")}</p>
           </div>
           <span className="counter-badge">{activityLogs.length}</span>
         </div>
 
-        {isLoadingActivity ? <LoadingState message="Refreshing activity..." /> : null}
+        {isLoadingActivity ? <LoadingState message={t("projectDetails.refreshingActivity")} /> : null}
 
         {!isLoadingActivity && activityLogs.length === 0 ? (
-          <p className="muted">No activity recorded yet.</p>
+          <p className="muted">{t("projectDetails.noActivity")}</p>
         ) : null}
 
         {!isLoadingActivity && activityLogs.length > 0 ? (
@@ -746,10 +748,12 @@ export function ProjectDetailsPage() {
             {activityLogs.slice(0, 8).map((activity) => (
               <article className="activity-item" key={activity.id}>
                 <div>
-                  <strong>{activity.user?.email ?? "System"}</strong>
+                  <strong>{activity.user?.email ?? t("common.system")}</strong>
                   <p>{activity.message}</p>
                 </div>
-                <time dateTime={activity.createdAt}>{formatDateTime(activity.createdAt)}</time>
+                <time dateTime={activity.createdAt}>
+                  {formatDateTime(activity.createdAt, i18n.language)}
+                </time>
               </article>
             ))}
           </div>
@@ -759,8 +763,8 @@ export function ProjectDetailsPage() {
       <section className="panel">
         <div className="section-heading">
           <div>
-            <h2>Team</h2>
-            <p className="muted">People assigned to this construction project.</p>
+            <h2>{t("projectDetails.team")}</h2>
+            <p className="muted">{t("projectDetails.teamDescription")}</p>
           </div>
         </div>
 
@@ -770,7 +774,7 @@ export function ProjectDetailsPage() {
               <div className="member-row" key={member.userId}>
                 <div>
                   <span>{member.user.email}</span>
-                  <strong>{member.user.role}</strong>
+                  <strong>{t(`roles.${member.user.role}`)}</strong>
                 </div>
                 {canManageMembers ? (
                   <button
@@ -779,44 +783,46 @@ export function ProjectDetailsPage() {
                     onClick={() => handleRemoveMember(member.userId)}
                     type="button"
                   >
-                    {removingMemberId === member.userId ? "Removing..." : "Remove"}
+                    {removingMemberId === member.userId ? t("common.removing") : t("common.remove")}
                   </button>
                 ) : null}
               </div>
             ))}
           </div>
         ) : (
-          <p className="muted">No members assigned yet.</p>
+          <p className="muted">{t("projectDetails.noMembers")}</p>
         )}
 
         {canCreateUsers ? (
           <div className="team-management">
             <form className="member-form" onSubmit={handleAddMember}>
               <label>
-                Add existing user
+                {t("projectDetails.addExistingUser")}
                 <select
                   disabled={isLoadingUsers || availableUsers.length === 0}
                   onChange={(event) => setSelectedMemberId(event.target.value)}
                   value={selectedMemberId}
                 >
                   <option value="">
-                    {availableUsers.length > 0 ? "Select user" : "No available users"}
+                    {availableUsers.length > 0
+                      ? t("projectDetails.selectUser")
+                      : t("projectDetails.noAvailableUsers")}
                   </option>
                   {availableUsers.map((availableUser) => (
                     <option key={availableUser.id} value={availableUser.id}>
-                      {availableUser.email} ({availableUser.role})
+                      {availableUser.email} ({t(`roles.${availableUser.role}`)})
                     </option>
                   ))}
                 </select>
               </label>
               <button disabled={isAddingMember || !selectedMemberId} type="submit">
-                {isAddingMember ? "Adding..." : "Add member"}
+                {isAddingMember ? t("common.adding") : t("projectDetails.addMember")}
               </button>
             </form>
 
             <form className="member-form member-form-wide" onSubmit={handleCreateUser}>
               <label>
-                New user email
+                {t("projectDetails.newUserEmail")}
                 <input
                   onChange={(event) =>
                     setNewUserDraft((currentDraft) => ({
@@ -824,14 +830,14 @@ export function ProjectDetailsPage() {
                       email: event.target.value,
                     }))
                   }
-                  placeholder="worker@test.com"
+                  placeholder={t("projectDetails.newUserEmailPlaceholder")}
                   type="email"
                   value={newUserDraft.email}
                 />
               </label>
 
               <label>
-                Password
+                {t("projectDetails.password")}
                 <input
                   onChange={(event) =>
                     setNewUserDraft((currentDraft) => ({
@@ -839,14 +845,14 @@ export function ProjectDetailsPage() {
                       password: event.target.value,
                     }))
                   }
-                  placeholder="At least 6 characters"
+                  placeholder={t("projectDetails.passwordPlaceholder")}
                   type="password"
                   value={newUserDraft.password}
                 />
               </label>
 
               <label>
-                Role
+                {t("projectDetails.role")}
                 <select
                   onChange={(event) =>
                     setNewUserDraft((currentDraft) => ({
@@ -856,9 +862,9 @@ export function ProjectDetailsPage() {
                   }
                   value={newUserDraft.role}
                 >
-                  <option value="WORKER">Worker</option>
-                  <option value="MANAGER">Manager</option>
-                  <option value="ADMIN">Admin</option>
+                  <option value="WORKER">{t("roles.WORKER")}</option>
+                  <option value="MANAGER">{t("roles.MANAGER")}</option>
+                  <option value="ADMIN">{t("roles.ADMIN")}</option>
                 </select>
               </label>
 
@@ -870,14 +876,13 @@ export function ProjectDetailsPage() {
                 }
                 type="submit"
               >
-                {isCreatingUser ? "Creating..." : "Create user"}
+                {isCreatingUser ? t("common.creating") : t("projectDetails.createUser")}
               </button>
             </form>
           </div>
         ) : canManageMembers ? (
           <p className="muted team-note">
-            User creation and member selection are available to admins. Managers can remove current
-            project members.
+            {t("projectDetails.userCreationNote")}
           </p>
         ) : null}
       </section>
@@ -885,21 +890,21 @@ export function ProjectDetailsPage() {
       {canCreateStage ? (
         <section className="panel">
           <div>
-            <h2>Create stage</h2>
-            <p className="muted">Add a project stage to organize construction work.</p>
+            <h2>{t("projectDetails.createStage")}</h2>
+            <p className="muted">{t("projectDetails.createStageDescription")}</p>
           </div>
 
           <form className="inline-form" onSubmit={handleCreateStage}>
             <label>
-              Stage name
+              {t("projectDetails.stageName")}
               <input
                 onChange={(event) => setStageName(event.target.value)}
-                placeholder="Foundation"
+                placeholder={t("projectDetails.stageNamePlaceholder")}
                 value={stageName}
               />
             </label>
             <button disabled={isCreatingStage || !stageName.trim()} type="submit">
-              {isCreatingStage ? "Creating..." : "Create"}
+              {isCreatingStage ? t("common.creating") : t("common.create")}
             </button>
           </form>
         </section>
@@ -942,8 +947,8 @@ export function ProjectDetailsPage() {
           ))
         ) : (
           <EmptyState
-            message="Create project stages to start organizing work."
-            title="No stages yet"
+            message={t("projectDetails.noStagesMessage")}
+            title={t("projectDetails.noStagesTitle")}
           />
         )}
       </section>
@@ -957,12 +962,12 @@ type UserDraft = {
   role: UserRole;
 };
 
-function getProjectErrorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : "Unable to load project";
+function getProjectErrorMessage(error: unknown, fallback: string) {
+  return error instanceof ApiError ? error.message : fallback;
 }
 
-function formatDateTime(date: string) {
-  return new Intl.DateTimeFormat("en", {
+function formatDateTime(date: string, language: string) {
+  return new Intl.DateTimeFormat(language, {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",

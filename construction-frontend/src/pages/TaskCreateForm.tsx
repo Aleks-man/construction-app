@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 import type { Project, ProjectStage, TaskPriority } from "../api/projects";
 import type { TaskDraft } from "./project-details-utils";
 
@@ -17,6 +18,7 @@ export function TaskCreateForm({
   stage: ProjectStage;
   value: TaskDraft;
 }) {
+  const { t } = useTranslation();
   const handleSubmit: ComponentProps<"form">["onSubmit"] = (event) => {
     event.preventDefault();
     onSubmit();
@@ -25,38 +27,38 @@ export function TaskCreateForm({
   return (
     <form className="task-create-form" onSubmit={handleSubmit}>
       <label>
-        Task title
+        {t("tasks.title")}
         <input
           onChange={(event) => onChange({ title: event.target.value })}
-          placeholder={`Task for ${stage.name}`}
+          placeholder={t("tasks.createPlaceholder", { stage: stage.name })}
           value={value.title}
         />
       </label>
 
       <label>
-        Description
+        {t("tasks.description")}
         <input
           onChange={(event) => onChange({ description: event.target.value })}
-          placeholder="Optional details"
+          placeholder={t("tasks.descriptionPlaceholder")}
           value={value.description}
         />
       </label>
 
       <div className="task-form-grid">
         <label>
-          Priority
+          {t("tasks.priority")}
           <select
             onChange={(event) => onChange({ priority: event.target.value as TaskPriority })}
             value={value.priority}
           >
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
+            <option value="LOW">{t("priorities.LOW")}</option>
+            <option value="MEDIUM">{t("priorities.MEDIUM")}</option>
+            <option value="HIGH">{t("priorities.HIGH")}</option>
           </select>
         </label>
 
         <label>
-          Due date
+          {t("tasks.dueDate")}
           <input
             onChange={(event) => onChange({ dueDate: event.target.value })}
             type="date"
@@ -66,22 +68,22 @@ export function TaskCreateForm({
       </div>
 
       <label>
-        Assignee
+        {t("tasks.assignee")}
         <select
           onChange={(event) => onChange({ assigneeId: event.target.value })}
           value={value.assigneeId}
         >
-          <option value="">Unassigned</option>
+          <option value="">{t("common.unassigned")}</option>
           {members.map((member) => (
             <option key={member.userId} value={member.userId}>
-              {member.user.email} ({member.user.role})
+              {member.user.email} ({t(`roles.${member.user.role}`)})
             </option>
           ))}
         </select>
       </label>
 
       <button disabled={isSubmitting || !value.title.trim()} type="submit">
-        {isSubmitting ? "Creating..." : "Add task"}
+        {isSubmitting ? t("common.creating") : t("tasks.addTask")}
       </button>
     </form>
   );

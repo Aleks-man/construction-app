@@ -1,4 +1,5 @@
 import { useState, type ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 import type { Project, ProjectStage, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
 import {
   canUpdateTaskStatus,
@@ -55,6 +56,7 @@ export function StageColumn({
   updatingTaskId: number | null;
   user: { id: number; role: string } | null;
 }) {
+  const { t } = useTranslation();
   const [isEditingStageName, setIsEditingStageName] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [stageNameDraft, setStageNameDraft] = useState(stage.name);
@@ -94,7 +96,7 @@ export function StageColumn({
         {isEditingStageName ? (
           <form className="stage-edit-form" onSubmit={handleUpdateStageName}>
             <label>
-              Stage name
+              {t("stage.name")}
               <input
                 autoFocus
                 onChange={(event) => setStageNameDraft(event.target.value)}
@@ -111,10 +113,10 @@ export function StageColumn({
                 }}
                 type="button"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button disabled={isUpdatingStage || !stageNameDraft.trim()} type="submit">
-                {isUpdatingStage ? "Saving..." : "Save"}
+                {isUpdatingStage ? t("common.saving") : t("common.save")}
               </button>
             </div>
           </form>
@@ -132,7 +134,7 @@ export function StageColumn({
                     }}
                     type="button"
                   >
-                    Edit
+                    {t("common.edit")}
                   </button>
                   <button
                     className="text-button danger-text-button"
@@ -140,7 +142,7 @@ export function StageColumn({
                     onClick={() => setIsConfirmingDelete(true)}
                     type="button"
                   >
-                    Delete
+                    {t("common.delete")}
                   </button>
                 </div>
               ) : null}
@@ -152,7 +154,7 @@ export function StageColumn({
 
       {isConfirmingDelete ? (
         <div className="stage-delete-confirm">
-          <p className="muted">Delete this stage and all its tasks?</p>
+          <p className="muted">{t("stage.deleteConfirm")}</p>
           <div className="compact-actions">
             <button
               className="secondary-button"
@@ -160,7 +162,7 @@ export function StageColumn({
               onClick={() => setIsConfirmingDelete(false)}
               type="button"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               className="danger-button"
@@ -168,7 +170,7 @@ export function StageColumn({
               onClick={handleDeleteStage}
               type="button"
             >
-              {isDeletingStage ? "Deleting..." : "Delete"}
+              {isDeletingStage ? t("common.deleting") : t("common.delete")}
             </button>
           </div>
         </div>
@@ -194,7 +196,7 @@ export function StageColumn({
         </div>
       ) : (
         <p className="muted">
-          {stage.tasks.length > 0 ? "No tasks match the filters." : "No tasks in this stage."}
+          {stage.tasks.length > 0 ? t("stage.noFilteredTasks") : t("stage.noTasks")}
         </p>
       )}
 
