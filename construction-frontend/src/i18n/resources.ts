@@ -227,7 +227,10 @@ export const resources = {
         deleteTitle: "Delete user?",
         deleteMessage:
           "{{email}} will be removed from projects and unassigned from tasks.",
+        deleteSelfMessage:
+          "Your account {{email}} will be deleted and you will be signed out.",
         deleteUser: "Delete user",
+        protectedAdmin: "Protected admin",
         loadError: "Unable to manage users",
       },
     },
@@ -462,7 +465,10 @@ export const resources = {
         deleteTitle: "Удалить пользователя?",
         deleteMessage:
           "{{email}} будет удален из проектов и снят с назначенных задач.",
+        deleteSelfMessage:
+          "Ваш аккаунт {{email}} будет удален, после чего вы выйдете из системы.",
         deleteUser: "Удалить пользователя",
+        protectedAdmin: "Защищенный администратор",
         loadError: "Не удалось управлять пользователями",
       },
     },

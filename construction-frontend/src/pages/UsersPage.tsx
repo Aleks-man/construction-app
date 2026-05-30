@@ -11,7 +11,7 @@ import { getUserDisplayName } from "../utils/user-display";
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
 
 export function UsersPage() {
-  const { user } = useAuth();
+  const { logout, user } = useAuth();
   const { i18n, t } = useTranslation();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [activeRole, setActiveRole] = useState<UserRole>("WORKER");
@@ -133,6 +133,12 @@ export function UsersPage() {
         currentUsers.filter((appUser) => appUser.id !== deletedUser.id),
       );
       setUserToDelete(null);
+
+      if (deletedUser.id === user?.id) {
+        logout();
+        return;
+      }
+
       setSuccessMessage(t("users.deletedMessage", { email: deletedUser.email }));
     } catch (deleteError) {
       setError(getUserErrorMessage(deleteError, t("users.loadError")));
@@ -286,6 +292,7 @@ export function UsersPage() {
           <div className="users-list">
             {visibleUsers.map((appUser) => {
               const isCurrentUser = appUser.id === user.id;
+              const isProtectedAdmin = appUser.role === "ADMIN" && !isCurrentUser;
 
               return (
                 <article className="user-card" key={appUser.id}>
@@ -306,16 +313,21 @@ export function UsersPage() {
                     </p>
                   </div>
 
-                  {isCurrentUser ? (
-                    <span className="current-user-badge">{t("common.currentUser")}</span>
+                  {isProtectedAdmin ? (
+                    <span className="current-user-badge">{t("users.protectedAdmin")}</span>
                   ) : (
-                    <button
-                      className="danger-button"
-                      onClick={() => setUserToDelete(appUser)}
-                      type="button"
-                    >
-                      {t("common.delete")}
-                    </button>
+                    <div className="user-card-actions">
+                      {isCurrentUser ? (
+                        <span className="current-user-badge">{t("common.currentUser")}</span>
+                      ) : null}
+                      <button
+                        className="danger-button"
+                        onClick={() => setUserToDelete(appUser)}
+                        type="button"
+                      >
+                        {t("common.delete")}
+                      </button>
+                    </div>
                   )}
                 </article>
               );
@@ -330,7 +342,13 @@ export function UsersPage() {
         confirmingLabel={t("common.deleting")}
         isConfirming={isDeleting}
         isOpen={Boolean(userToDelete)}
-        message={userToDelete ? t("users.deleteMessage", { email: userToDelete.email }) : ""}
+        message={
+          userToDelete
+            ? t(userToDelete.id === user?.id ? "users.deleteSelfMessage" : "users.deleteMessage", {
+                email: userToDelete.email,
+              })
+            : ""
+        }
         onCancel={() => setUserToDelete(null)}
         onConfirm={handleDeleteUser}
         title={t("users.deleteTitle")}

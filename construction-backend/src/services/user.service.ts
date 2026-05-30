@@ -81,12 +81,12 @@ export const userService = {
     return userRepository.updateById(id, updateData);
   },
 
-  async deleteUser(id: number, currentUserId?: number) {
-    if (currentUserId === id) {
-      throw forbidden("You cannot delete your own user account");
-    }
+  async deleteUser(id: number, currentUser?: { id: number; role: Role }) {
+    const user = await this.getUser(id);
 
-    await this.getUser(id);
+    if (user.role === "ADMIN" && currentUser?.id !== id) {
+      throw forbidden("Admins cannot delete other admin accounts");
+    }
 
     return userRepository.deleteById(id);
   },

@@ -1076,6 +1076,15 @@ select:focus {
   margin-bottom: 0;
 }
 
+.user-card-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .current-user-badge {
   background: #eef4f3;
   border-radius: 999px;
@@ -1496,6 +1505,10 @@ select:focus {
   .user-card {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .user-card-actions {
+    justify-content: flex-start;
   }
 }
 

@@ -68,7 +68,7 @@ export const userController = {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = parsePositiveInt(req.params.id, "userId");
-      const user = await userService.deleteUser(userId, req.user?.id);
+      const user = await userService.deleteUser(userId, req.user);
       res.json(user);
     } catch (error) {
       next(error);

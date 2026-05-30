@@ -443,11 +443,6 @@ describe("API", () => {
     });
 
     await request(app)
-      .delete(`/users/${admin.id}`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .expect(403);
-
-    await request(app)
       .delete(`/users/${worker.id}`)
       .set("Authorization", `Bearer ${adminToken}`)
       .expect(200);
@@ -470,6 +465,32 @@ describe("API", () => {
     expect(deletedWorker).toBeNull();
     expect(projectMember).toBeNull();
     expect(task?.assigneeId).toBeNull();
+  });
+
+  it("allows admins to delete themselves but not other admins", async () => {
+    const admin = await createTestUser("self-delete-admin", "ADMIN");
+    const otherAdmin = await createTestUser("other-delete-admin", "ADMIN");
+    const adminToken = await loginAs(admin);
+
+    await request(app)
+      .delete(`/users/${otherAdmin.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(403);
+
+    await request(app)
+      .delete(`/users/${admin.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const deletedAdmin = await prisma.user.findUnique({
+      where: { id: admin.id },
+    });
+    const remainingAdmin = await prisma.user.findUnique({
+      where: { id: otherAdmin.id },
+    });
+
+    expect(deletedAdmin).toBeNull();
+    expect(remainingAdmin).not.toBeNull();
   });
 });
 
