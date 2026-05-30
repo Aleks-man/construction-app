@@ -16,6 +16,12 @@ type AuthTokenPayload = {
   role: Role;
 };
 
+type AuthUser = JwtUser & {
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+};
+
 const jwtSecret = process.env.JWT_SECRET;
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "1d";
 
@@ -76,10 +82,13 @@ function signToken(user: JwtUser) {
   return jwt.sign(payload, jwtSecret as Secret, options);
 }
 
-function toJwtUser(user: JwtUser) {
+function toJwtUser(user: AuthUser) {
   return {
     id: user.id,
     email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phone: user.phone,
     role: user.role,
   };
 }

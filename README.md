@@ -43,11 +43,15 @@ Backend:
 - JWT authentication and current-user endpoint
 - Password hashing with bcrypt
 - Role-based access control for Admin, Manager and Worker users
-- Project, member, stage and task CRUD
+- User contact profile, project member, stage and task management
 - Unique project name validation
-- Transactional deletion for projects and stages
+- Safe user deletion with project membership cleanup and task unassignment
+- Transactional project deletion with related stages, tasks and members
+- Transactional stage deletion with related tasks
+- Extended task model with description, priority, due date and timestamps
 - Task filtering by status, priority, assignee, stage and due date range
 - Worker permission rules for assigned task status updates
+- Manager permissions scoped to assigned projects
 - Project activity log for project, member, stage and task changes
 - Prisma seed for initial admin user
 - Backend API tests for authentication, project validation and worker task permissions
@@ -56,11 +60,11 @@ Frontend:
 - Protected login flow with token storage and redirects
 - English/Russian language switcher with saved preference
 - Responsive dashboard layout with navigation and logout
-- Project creation, editing and deletion
+- Project creation, editing, membership badge and deletion
 - Project details page with stages, tasks, members and activity history
-- User and project member management
-- Task creation, editing, deletion, filtering and status updates
-- My Tasks dashboard for assigned work
+- User and project member management with contact details
+- Task creation, editing, deletion, filtering and role-aware status updates
+- My Tasks dashboard scoped by user role and project assignment
 - Confirmation dialogs for destructive actions
 - Loading, empty and error states
 

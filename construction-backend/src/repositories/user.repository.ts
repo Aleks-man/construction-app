@@ -3,6 +3,9 @@ import { prisma } from "../prisma";
 const userSelect = {
   id: true,
   email: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
   role: true,
   createdAt: true,
 };
@@ -13,7 +16,7 @@ const userWithPasswordSelect = {
 };
 
 export const userRepository = {
-  create(data: { email: string; password: string; role: "ADMIN" | "MANAGER" | "WORKER" }) {
+  create(data: UserCreateData) {
     return prisma.user.create({
       data,
       select: userSelect,
@@ -43,7 +46,7 @@ export const userRepository = {
 
   updateById(
     id: number,
-    data: Partial<{ email: string; password: string; role: "ADMIN" | "MANAGER" | "WORKER" }>,
+    data: UserUpdateData,
   ) {
     return prisma.user.update({
       where: { id },
@@ -70,3 +73,14 @@ export const userRepository = {
     });
   },
 };
+
+type UserCreateData = {
+  email: string;
+  password: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  role: "ADMIN" | "MANAGER" | "WORKER";
+};
+
+type UserUpdateData = Partial<UserCreateData>;

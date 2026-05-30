@@ -2,6 +2,8 @@ import { useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { PencilIcon } from "../components/PencilIcon";
+import { getUserDisplayName } from "../utils/user-display";
 import { formatDate, getNextStatuses } from "./project-details-utils";
 
 export function TaskCard({
@@ -43,6 +45,16 @@ export function TaskCard({
     }
   };
 
+  const handleTaskEditKeyDown: ComponentProps<"form">["onKeyDown"] = (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    event.preventDefault();
+    setTaskDraft(createTaskEditDraft(task));
+    setIsEditingTask(false);
+  };
+
   async function handleDeleteTask() {
     const isDeleted = await onDeleteTask(task);
 
@@ -54,7 +66,11 @@ export function TaskCard({
   return (
     <article className="task-card">
       {isEditingTask ? (
-        <form className="task-edit-form" onSubmit={handleUpdateTask}>
+        <form
+          className="task-edit-form"
+          onKeyDown={handleTaskEditKeyDown}
+          onSubmit={handleUpdateTask}
+        >
           <label>
             {t("tasks.title")}
             <input
@@ -109,7 +125,7 @@ export function TaskCard({
               <option value="">{t("common.unassigned")}</option>
               {members.map((member) => (
                 <option key={member.userId} value={member.userId}>
-                  {member.user.email} ({t(`roles.${member.user.role}`)})
+                  {getUserDisplayName(member.user)} ({t(`roles.${member.user.role}`)})
                 </option>
               ))}
             </select>
@@ -166,14 +182,17 @@ export function TaskCard({
       {canManageTask && !isEditingTask ? (
         <div className="task-actions">
           <button
+            aria-label={t("common.edit")}
+            className="icon-button"
             onClick={() => {
               setTaskDraft(createTaskEditDraft(task));
               setIsEditingTask(true);
               setIsConfirmingDelete(false);
             }}
+            title={t("common.edit")}
             type="button"
           >
-            {t("common.edit")}
+            <PencilIcon />
           </button>
           <button
             className="danger-action-button"
@@ -232,5 +251,5 @@ function getAssigneeLabel(task: ProjectTask, members: Project["users"], unassign
 
   const assignee = members.find((member) => member.userId === task.assigneeId);
 
-  return assignee ? assignee.user.email : `User #${task.assigneeId}`;
+  return assignee ? getUserDisplayName(assignee.user) : `User #${task.assigneeId}`;
 }

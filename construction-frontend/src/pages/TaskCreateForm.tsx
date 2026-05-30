@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectStage, TaskPriority } from "../api/projects";
+import { getUserDisplayName } from "../utils/user-display";
 import type { TaskDraft } from "./project-details-utils";
 
 export function TaskCreateForm({
@@ -76,7 +77,7 @@ export function TaskCreateForm({
           <option value="">{t("common.unassigned")}</option>
           {members.map((member) => (
             <option key={member.userId} value={member.userId}>
-              {member.user.email} ({t(`roles.${member.user.role}`)})
+              {getUserDisplayName(member.user)} ({t(`roles.${member.user.role}`)})
             </option>
           ))}
         </select>

@@ -32,6 +32,9 @@ const activityInclude = {
     select: {
       id: true,
       email: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
       role: true,
     },
   },

@@ -194,6 +194,30 @@ select:focus {
   color: #1f5f5b;
 }
 
+.icon-button {
+  align-items: center;
+  background: #e3f1ee;
+  border-radius: 8px;
+  color: #24746f;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 32px;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0;
+  width: 32px;
+}
+
+.icon-button:hover {
+  background: #cfe5e1;
+  color: #1f5f5b;
+}
+
+.icon-button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(36, 116, 111, 0.14);
+  outline: none;
+}
+
 .form-error {
   background: #fff1f0;
   border: 1px solid #ffccc7;
@@ -492,6 +516,13 @@ select:focus {
     transform 160ms ease;
 }
 
+.project-card-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
 .project-card:hover {
   border-color: #9fc6c3;
   box-shadow: 0 12px 30px rgba(23, 32, 42, 0.08);
@@ -504,6 +535,18 @@ select:focus {
   line-height: 1.2;
   margin: 0 0 8px;
   overflow-wrap: anywhere;
+}
+
+.membership-badge {
+  background: #e6f4ea;
+  border: 1px solid #b7dfc2;
+  border-radius: 999px;
+  color: #1e7e34;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 7px 10px;
 }
 
 .project-stats {
@@ -576,8 +619,9 @@ select:focus {
 }
 
 .project-edit-button {
-  min-height: 36px;
-  padding: 8px 12px;
+  height: 32px;
+  min-height: 32px;
+  width: 32px;
 }
 
 .project-edit-form {
@@ -729,13 +773,63 @@ select:focus {
 
 .member-row div {
   display: grid;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .member-row strong {
   color: #1f5f5b;
   font-size: 12px;
   overflow-wrap: anywhere;
+}
+
+.contact-details {
+  min-width: 0;
+}
+
+.contact-details summary {
+  color: #101820;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.contact-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.contact-details summary::after {
+  color: #98a2b3;
+  content: " +";
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.contact-details[open] summary::after {
+  content: " -";
+}
+
+.contact-details-body,
+.contact-line {
+  color: #667085;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.contact-details-body a,
+.contact-line a {
+  color: #1f5f5b;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.contact-details-body a:hover,
+.contact-line a:hover {
+  text-decoration: underline;
 }
 
 .danger-button {
@@ -855,9 +949,22 @@ select:focus {
 .team-management {
   border-top: 1px solid #e7ebef;
   display: grid;
-  gap: 16px;
+  gap: 18px;
   margin-top: 18px;
   padding-top: 18px;
+}
+
+.form-section-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.form-section-heading h3 {
+  font-size: 17px;
+}
+
+.form-section-heading p {
+  margin-bottom: 0;
 }
 
 .member-form {
@@ -868,19 +975,22 @@ select:focus {
 }
 
 .member-form-wide {
-  grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.8fr) minmax(140px, 0.7fr) auto;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .member-form button {
   align-items: center;
+  align-self: end;
   background: #24746f;
   border-radius: 6px;
   color: #ffffff;
   display: inline-flex;
   font-weight: 700;
+  height: 44px;
   justify-content: center;
   min-height: 44px;
   padding: 10px 14px;
+  white-space: nowrap;
 }
 
 .team-note {
@@ -1108,6 +1218,10 @@ select:focus {
   font-weight: 800;
   min-height: 34px;
   padding: 7px 10px;
+}
+
+.task-actions .icon-button {
+  padding: 0;
 }
 
 .task-actions .danger-action-button {
@@ -1414,6 +1528,11 @@ select:focus {
   .secondary-button,
   .danger-button {
     width: 100%;
+  }
+
+  .task-actions .icon-button,
+  .stage-actions .icon-button {
+    width: 32px;
   }
 
   .task-card-header {

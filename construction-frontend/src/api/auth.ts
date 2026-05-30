@@ -3,6 +3,9 @@ import { apiRequest } from "./client";
 export type AuthUser = {
   id: number;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
   role: "ADMIN" | "MANAGER" | "WORKER";
 };
 

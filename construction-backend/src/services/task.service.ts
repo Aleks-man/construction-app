@@ -4,6 +4,7 @@ import { stageRepository } from "../repositories/stage.repository";
 import { taskRepository } from "../repositories/task.repository";
 import { userRepository } from "../repositories/user.repository";
 import { activityService, type ActivityActor } from "./activity.service";
+import { ensureActorCanManageProject } from "./project-permission.service";
 import type { Role } from "./user.service";
 
 export const taskStatuses = ["NEW", "IN_PROGRESS", "DONE"] as const;
@@ -22,6 +23,13 @@ export const taskService = {
     stageId: number;
     assigneeId?: number | null;
   }, actor?: ActivityActor) {
+    const stage = await stageRepository.findById(data.stageId);
+
+    if (!stage) {
+      throw notFound("Stage not found");
+    }
+
+    await ensureActorCanManageProject(stage.projectId, actor);
     await ensureAssigneeCanBeAssigned(data.stageId, data.assigneeId);
 
     const task = await taskRepository.create({
@@ -46,19 +54,24 @@ export const taskService = {
     return task;
   },
 
-  getTasks(filters: {
+  async getTasks(filters: {
     stageId?: number;
     assigneeId?: number;
     status?: TaskStatus;
     priority?: TaskPriority;
     dueBefore?: Date;
     dueAfter?: Date;
-  }) {
+  }, actor?: ActivityActor) {
     if (filters.dueBefore && filters.dueAfter && filters.dueAfter > filters.dueBefore) {
       throw badRequest("dueAfter must be before dueBefore");
     }
 
-    return taskRepository.findAll(filters);
+    const visibilityFilters = await getTaskVisibilityFilters(actor);
+
+    return taskRepository.findAll({
+      ...filters,
+      ...visibilityFilters,
+    });
   },
 
   async getTask(id: number) {
@@ -85,6 +98,7 @@ export const taskService = {
     actor?: ActivityActor,
   ) {
     const existingTask = await this.getTask(id);
+    await ensureActorCanManageProject(existingTask.stage.projectId, actor);
 
     const updateData: Partial<{
       title: string;
@@ -125,6 +139,16 @@ export const taskService = {
     }
 
     if (data.stageId !== undefined || data.assigneeId !== undefined) {
+      if (data.stageId !== undefined) {
+        const newStage = await stageRepository.findById(data.stageId);
+
+        if (!newStage) {
+          throw notFound("Stage not found");
+        }
+
+        await ensureActorCanManageProject(newStage.projectId, actor);
+      }
+
       await ensureAssigneeCanBeAssigned(
         data.stageId ?? existingTask.stageId,
         data.assigneeId === undefined ? existingTask.assigneeId : data.assigneeId,
@@ -156,6 +180,10 @@ export const taskService = {
   ) {
     const task = await this.getTask(id);
 
+    if (currentUser.role === "MANAGER") {
+      await ensureActorCanManageProject(task.stage.projectId, currentUser);
+    }
+
     if (currentUser.role === "WORKER" && task.assigneeId !== currentUser.id) {
       throw forbidden("Workers can update only their assigned tasks");
     }
@@ -176,6 +204,7 @@ export const taskService = {
 
   async deleteTask(id: number, actor?: ActivityActor) {
     const task = await this.getTask(id);
+    await ensureActorCanManageProject(task.stage.projectId, actor);
 
     await activityService.record({
       action: "TASK_DELETED",
@@ -189,6 +218,28 @@ export const taskService = {
     return taskRepository.deleteById(id);
   },
 };
+
+async function getTaskVisibilityFilters(actor?: ActivityActor) {
+  if (!actor || actor.role === "ADMIN") {
+    return {};
+  }
+
+  if (actor.role === "WORKER") {
+    return {
+      assigneeId: actor.id,
+    };
+  }
+
+  if (actor.role === "MANAGER") {
+    const projectUsers = await projectUserRepository.findProjectIdsByUserId(actor.id);
+
+    return {
+      projectIds: projectUsers.map((projectUser) => projectUser.projectId),
+    };
+  }
+
+  return {};
+}
 
 function normalizeTitle(title: string) {
   const trimmedTitle = title.trim();

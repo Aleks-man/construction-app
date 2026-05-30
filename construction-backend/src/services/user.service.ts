@@ -8,12 +8,23 @@ export type Role = (typeof roles)[number];
 const passwordSaltRounds = 10;
 
 export const userService = {
-  async createUser(data: { email: string; password: string; role: Role }) {
+  async createUser(data: UserCreateInput) {
+    if (data.currentUserRole === "MANAGER" && data.role !== "WORKER") {
+      throw forbidden("Managers can create only worker users");
+    }
+
     const email = normalizeEmail(data.email);
     const password = validatePassword(data.password);
     const passwordHash = await bcrypt.hash(password, passwordSaltRounds);
 
-    return userRepository.create({ email, password: passwordHash, role: data.role });
+    return userRepository.create({
+      email,
+      password: passwordHash,
+      firstName: normalizeOptionalContactField(data.firstName),
+      lastName: normalizeOptionalContactField(data.lastName),
+      phone: normalizeOptionalContactField(data.phone),
+      role: data.role,
+    });
   },
 
   getUsers() {
@@ -32,11 +43,11 @@ export const userService = {
 
   async updateUser(
     id: number,
-    data: Partial<{ email: string; password: string; role: Role }>,
+    data: UserUpdateInput,
   ) {
     await this.getUser(id);
 
-    const updateData: Partial<{ email: string; password: string; role: Role }> = {};
+    const updateData: UserUpdateData = {};
 
     if (data.email !== undefined) {
       updateData.email = normalizeEmail(data.email);
@@ -49,6 +60,18 @@ export const userService = {
 
     if (data.role !== undefined) {
       updateData.role = data.role;
+    }
+
+    if (data.firstName !== undefined) {
+      updateData.firstName = normalizeOptionalContactField(data.firstName);
+    }
+
+    if (data.lastName !== undefined) {
+      updateData.lastName = normalizeOptionalContactField(data.lastName);
+    }
+
+    if (data.phone !== undefined) {
+      updateData.phone = normalizeOptionalContactField(data.phone);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -69,6 +92,27 @@ export const userService = {
   },
 };
 
+type UserCreateInput = {
+  email: string;
+  password: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  role: Role;
+  currentUserRole?: Role;
+};
+
+type UserUpdateInput = Partial<UserCreateInput>;
+
+type UserUpdateData = Partial<{
+  email: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  role: Role;
+}>;
+
 function normalizeEmail(email: string) {
   const normalized = email.trim().toLowerCase();
 
@@ -87,4 +131,14 @@ function validatePassword(password: string) {
   }
 
   return trimmedPassword;
+}
+
+function normalizeOptionalContactField(value: string | null | undefined) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+
+  return trimmedValue || null;
 }

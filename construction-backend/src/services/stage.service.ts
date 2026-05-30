@@ -2,10 +2,12 @@ import { badRequest, notFound } from "../errors/http-error";
 import { projectRepository } from "../repositories/project.repository";
 import { stageRepository } from "../repositories/stage.repository";
 import { activityService, type ActivityActor } from "./activity.service";
+import { ensureActorCanManageProject } from "./project-permission.service";
 
 export const stageService = {
   async createStage(data: { name: string; projectId: number }, actor?: ActivityActor) {
     await ensureProjectExists(data.projectId);
+    await ensureActorCanManageProject(data.projectId, actor);
 
     const stage = await stageRepository.create({
       name: normalizeName(data.name),
@@ -44,6 +46,7 @@ export const stageService = {
     actor?: ActivityActor,
   ) {
     const existingStage = await this.getStage(id);
+    await ensureActorCanManageProject(existingStage.projectId, actor);
 
     const updateData: Partial<{ name: string; projectId: number }> = {};
 
@@ -53,6 +56,7 @@ export const stageService = {
 
     if (data.projectId !== undefined) {
       await ensureProjectExists(data.projectId);
+      await ensureActorCanManageProject(data.projectId, actor);
       updateData.projectId = data.projectId;
     }
 
@@ -78,6 +82,7 @@ export const stageService = {
 
   async deleteStage(id: number, actor?: ActivityActor) {
     const stage = await this.getStage(id);
+    await ensureActorCanManageProject(stage.projectId, actor);
 
     await activityService.record({
       action: "STAGE_DELETED",

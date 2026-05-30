@@ -5,10 +5,9 @@ import { authMiddleware, requireRole } from "../middlewares/auth.middleware";
 export const userRouter = Router();
 
 userRouter.use(authMiddleware);
-userRouter.use(requireRole("ADMIN"));
 
-userRouter.post("/", userController.create);
-userRouter.get("/", userController.getAll);
-userRouter.get("/:id", userController.getById);
-userRouter.patch("/:id", userController.update);
-userRouter.delete("/:id", userController.delete);
+userRouter.post("/", requireRole("ADMIN", "MANAGER"), userController.create);
+userRouter.get("/", requireRole("ADMIN", "MANAGER"), userController.getAll);
+userRouter.get("/:id", requireRole("ADMIN", "MANAGER"), userController.getById);
+userRouter.patch("/:id", requireRole("ADMIN"), userController.update);
+userRouter.delete("/:id", requireRole("ADMIN"), userController.delete);

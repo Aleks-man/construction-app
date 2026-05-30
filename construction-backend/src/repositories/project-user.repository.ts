@@ -6,6 +6,9 @@ const projectUserInclude = {
     select: {
       id: true,
       email: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
       role: true,
       createdAt: true,
     },
@@ -25,6 +28,15 @@ export const projectUserRepository = {
       where: projectId ? { projectId } : undefined,
       include: projectUserInclude,
       orderBy: [{ projectId: "asc" }, { userId: "asc" }],
+    });
+  },
+
+  findProjectIdsByUserId(userId: number) {
+    return prisma.projectUser.findMany({
+      where: { userId },
+      select: {
+        projectId: true,
+      },
     });
   },
 

@@ -130,32 +130,44 @@ export function ProjectsPage() {
 
         {!isLoading && projects.length > 0 ? (
           <div className="projects-grid">
-            {projects.map((project) => (
-              <Link className="project-card" key={project.id} to={`/projects/${project.id}`}>
-                <div>
-                  <p className="eyebrow">{t("projects.cardEyebrow", { id: project.id })}</p>
-                  <h3>{project.name}</h3>
-                  <p className="muted">
-                    {t("common.created")} {formatDate(project.createdAt, i18n.language)}
-                  </p>
-                </div>
+            {projects.map((project) => {
+              const isCurrentUserMember = project.users.some(
+                (member) => member.userId === user?.id,
+              );
 
-                <dl className="project-stats">
-                  <div>
-                    <dt>{t("projects.statsStages")}</dt>
-                    <dd>{project.stages.length}</dd>
+              return (
+                <Link className="project-card" key={project.id} to={`/projects/${project.id}`}>
+                  <div className="project-card-header">
+                    <div>
+                      <p className="eyebrow">{t("projects.cardEyebrow", { id: project.id })}</p>
+                      <h3>{project.name}</h3>
+                      <p className="muted">
+                        {t("common.created")} {formatDate(project.createdAt, i18n.language)}
+                      </p>
+                    </div>
+
+                    {isCurrentUserMember ? (
+                      <span className="membership-badge">{t("projects.memberBadge")}</span>
+                    ) : null}
                   </div>
-                  <div>
-                    <dt>{t("projects.statsTasks")}</dt>
-                    <dd>{countProjectTasks(project)}</dd>
-                  </div>
-                  <div>
-                    <dt>{t("projects.statsMembers")}</dt>
-                    <dd>{project.users.length}</dd>
-                  </div>
-                </dl>
-              </Link>
-            ))}
+
+                  <dl className="project-stats">
+                    <div>
+                      <dt>{t("projects.statsStages")}</dt>
+                      <dd>{project.stages.length}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("projects.statsTasks")}</dt>
+                      <dd>{countProjectTasks(project)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("projects.statsMembers")}</dt>
+                      <dd>{project.users.length}</dd>
+                    </div>
+                  </dl>
+                </Link>
+              );
+            })}
           </div>
         ) : null}
       </section>

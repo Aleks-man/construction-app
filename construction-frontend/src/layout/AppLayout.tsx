@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/auth-context";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { getUserDisplayName } from "../utils/user-display";
 
 export function AppLayout() {
   const { logout, user } = useAuth();
@@ -31,7 +32,7 @@ export function AppLayout() {
 
           <div className="user-menu">
             <LanguageSwitcher />
-            <span>{user?.email}</span>
+            <span>{user ? getUserDisplayName(user) : ""}</span>
             <button className="secondary-button" onClick={logout} type="button">
               {t("common.signOut")}
             </button>

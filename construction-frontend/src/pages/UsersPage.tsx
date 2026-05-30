@@ -6,6 +6,7 @@ import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PasswordInput } from "../components/PasswordInput";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { getUserDisplayName } from "../utils/user-display";
 
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
 
@@ -16,6 +17,9 @@ export function UsersPage() {
   const [activeRole, setActiveRole] = useState<UserRole>("WORKER");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<UserRole>("WORKER");
   const [userToDelete, setUserToDelete] = useState<AppUser | null>(null);
   const [error, setError] = useState("");
@@ -91,12 +95,18 @@ export function UsersPage() {
       const createdUser = await createUser({
         email: email.trim(),
         password,
+        firstName: firstName.trim() || null,
+        lastName: lastName.trim() || null,
+        phone: phone.trim() || null,
         role,
       });
 
       setUsers((currentUsers) => [createdUser, ...currentUsers]);
       setEmail("");
       setPassword("");
+      setFirstName("");
+      setLastName("");
+      setPhone("");
       setRole("WORKER");
       setActiveRole(createdUser.role);
       setSuccessMessage(t("users.createdMessage", { email: createdUser.email }));
@@ -147,6 +157,39 @@ export function UsersPage() {
 
         <form className="member-form member-form-wide users-create-form" onSubmit={handleCreateUser}>
           <label>
+            {t("users.firstName")}
+            <input
+              autoComplete="given-name"
+              onChange={(event) => setFirstName(event.target.value)}
+              placeholder={t("users.firstNamePlaceholder")}
+              required
+              value={firstName}
+            />
+          </label>
+
+          <label>
+            {t("users.lastName")}
+            <input
+              autoComplete="family-name"
+              onChange={(event) => setLastName(event.target.value)}
+              placeholder={t("users.lastNamePlaceholder")}
+              required
+              value={lastName}
+            />
+          </label>
+
+          <label>
+            {t("users.phone")}
+            <input
+              autoComplete="tel"
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder={t("users.phonePlaceholder")}
+              type="tel"
+              value={phone}
+            />
+          </label>
+
+          <label>
             {t("users.email")}
             <input
               autoComplete="email"
@@ -181,7 +224,16 @@ export function UsersPage() {
             </select>
           </label>
 
-          <button disabled={isCreating || !email.trim() || password.length < 6} type="submit">
+          <button
+            disabled={
+              isCreating ||
+              !firstName.trim() ||
+              !lastName.trim() ||
+              !email.trim() ||
+              password.length < 6
+            }
+            type="submit"
+          >
             {isCreating ? t("users.creating") : t("users.createUser")}
           </button>
         </form>
@@ -238,7 +290,16 @@ export function UsersPage() {
               return (
                 <article className="user-card" key={appUser.id}>
                   <div>
-                    <strong>{appUser.email}</strong>
+                    <strong>{getUserDisplayName(appUser)}</strong>
+                    <p className="contact-line">
+                      <a href={`mailto:${appUser.email}`}>{appUser.email}</a>
+                      {appUser.phone ? (
+                        <>
+                          <span aria-hidden="true">-</span>
+                          <a href={`tel:${appUser.phone}`}>{appUser.phone}</a>
+                        </>
+                      ) : null}
+                    </p>
                     <p className="muted">
                       {t(`roles.${appUser.role}`)} - {t("common.created")}{" "}
                       {formatDate(appUser.createdAt, i18n.language)}
