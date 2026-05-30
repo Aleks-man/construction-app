@@ -107,7 +107,7 @@ describe("API", () => {
         password: testPassword,
         firstName: "Alex",
         lastName: "Worker",
-        phone: "+1 555 0100",
+        phone: "+1 555 010 1234",
         role: "WORKER",
       })
       .expect(201);
@@ -116,10 +116,27 @@ describe("API", () => {
       email: expect.stringMatching(testEmailDomain),
       firstName: "Alex",
       lastName: "Worker",
-      phone: "+1 555 0100",
+      phone: "+1 555 010 1234",
       role: "WORKER",
     });
     expect(createUserResponse.body.password).toBeUndefined();
+  });
+
+  it("rejects invalid phone numbers when creating users", async () => {
+    const adminToken = await loginAs(await createTestUser("phone-admin", "ADMIN"));
+
+    await request(app)
+      .post("/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        email: `invalid-phone-worker-${Date.now()}${testEmailDomain}`,
+        password: testPassword,
+        firstName: "Invalid",
+        lastName: "Phone",
+        phone: "12345",
+        role: "WORKER",
+      })
+      .expect(400);
   });
 
   it("allows managers to create only worker users", async () => {
@@ -443,11 +460,6 @@ describe("API", () => {
     });
 
     await request(app)
-      .delete(`/users/${admin.id}`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .expect(403);
-
-    await request(app)
       .delete(`/users/${worker.id}`)
       .set("Authorization", `Bearer ${adminToken}`)
       .expect(200);
@@ -470,6 +482,65 @@ describe("API", () => {
     expect(deletedWorker).toBeNull();
     expect(projectMember).toBeNull();
     expect(task?.assigneeId).toBeNull();
+  });
+
+  it("allows admins to delete themselves but not other admins", async () => {
+    const admin = await createTestUser("self-delete-admin", "ADMIN");
+    const otherAdmin = await createTestUser("other-delete-admin", "ADMIN");
+    const adminToken = await loginAs(admin);
+
+    await request(app)
+      .delete(`/users/${otherAdmin.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(403);
+
+    await request(app)
+      .delete(`/users/${admin.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const deletedAdmin = await prisma.user.findUnique({
+      where: { id: admin.id },
+    });
+    const remainingAdmin = await prisma.user.findUnique({
+      where: { id: otherAdmin.id },
+    });
+
+    expect(deletedAdmin).toBeNull();
+    expect(remainingAdmin).not.toBeNull();
+  });
+
+  it("prevents deleting the protected demo admin account", async () => {
+    const originalSeedAdminEmail = process.env.SEED_ADMIN_EMAIL;
+    const protectedAdmin = await createTestUser("protected-demo-admin", "ADMIN");
+    const protectedAdminToken = await loginAs(protectedAdmin);
+
+    process.env.SEED_ADMIN_EMAIL = protectedAdmin.email;
+
+    try {
+      await request(app)
+        .patch(`/users/${protectedAdmin.id}`)
+        .set("Authorization", `Bearer ${protectedAdminToken}`)
+        .send({ firstName: "Changed" })
+        .expect(403);
+
+      await request(app)
+        .delete(`/users/${protectedAdmin.id}`)
+        .set("Authorization", `Bearer ${protectedAdminToken}`)
+        .expect(403);
+
+      const remainingAdmin = await prisma.user.findUnique({
+        where: { id: protectedAdmin.id },
+      });
+
+      expect(remainingAdmin).not.toBeNull();
+    } finally {
+      if (originalSeedAdminEmail === undefined) {
+        delete process.env.SEED_ADMIN_EMAIL;
+      } else {
+        process.env.SEED_ADMIN_EMAIL = originalSeedAdminEmail;
+      }
+    }
   });
 });
 

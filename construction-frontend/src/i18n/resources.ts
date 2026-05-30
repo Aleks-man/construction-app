@@ -65,10 +65,6 @@ export const resources = {
         MEDIUM: "Medium",
         HIGH: "High",
       },
-      statusActions: {
-        IN_PROGRESS: "Start",
-        DONE: "Mark done",
-      },
       state: {
         somethingWrong: "Something went wrong",
       },
@@ -135,7 +131,8 @@ export const resources = {
         lastName: "Last name",
         lastNamePlaceholder: "Morgan",
         phone: "Phone",
-        phonePlaceholder: "+1 555 0100",
+        phonePlaceholder: "+1 555 010 1234",
+        phoneValidation: "Use 10 to 15 digits. You can include +, spaces, brackets or dashes.",
         email: "Email",
         emailPlaceholder: "worker@test.com",
         password: "Password",
@@ -208,7 +205,8 @@ export const resources = {
         lastName: "Last name",
         lastNamePlaceholder: "Morgan",
         phone: "Phone",
-        phonePlaceholder: "+1 555 0100",
+        phonePlaceholder: "+1 555 010 1234",
+        phoneValidation: "Use 10 to 15 digits. You can include +, spaces, brackets or dashes.",
         email: "Email",
         emailPlaceholder: "worker@example.com",
         password: "Password",
@@ -227,7 +225,11 @@ export const resources = {
         deleteTitle: "Delete user?",
         deleteMessage:
           "{{email}} will be removed from projects and unassigned from tasks.",
+        deleteSelfMessage:
+          "Your account {{email}} will be deleted and you will be signed out.",
         deleteUser: "Delete user",
+        protectedAdmin: "Protected admin",
+        protectedDemoAdmin: "Protected demo admin",
         loadError: "Unable to manage users",
       },
     },
@@ -298,10 +300,6 @@ export const resources = {
         MEDIUM: "Средний",
         HIGH: "Высокий",
       },
-      statusActions: {
-        IN_PROGRESS: "Начать",
-        DONE: "Завершить",
-      },
       state: {
         somethingWrong: "Что-то пошло не так",
       },
@@ -369,6 +367,8 @@ export const resources = {
         lastNamePlaceholder: "Иванов",
         phone: "Телефон",
         phonePlaceholder: "+7 999 123-45-67",
+        phoneValidation:
+          "Введите от 10 до 15 цифр. Можно использовать +, пробелы, скобки и дефисы.",
         email: "Email",
         emailPlaceholder: "worker@test.com",
         password: "Пароль",
@@ -443,6 +443,8 @@ export const resources = {
         lastNamePlaceholder: "Иванов",
         phone: "Телефон",
         phonePlaceholder: "+7 999 123-45-67",
+        phoneValidation:
+          "Введите от 10 до 15 цифр. Можно использовать +, пробелы, скобки и дефисы.",
         email: "Email",
         emailPlaceholder: "worker@example.com",
         password: "Пароль",
@@ -462,7 +464,11 @@ export const resources = {
         deleteTitle: "Удалить пользователя?",
         deleteMessage:
           "{{email}} будет удален из проектов и снят с назначенных задач.",
+        deleteSelfMessage:
+          "Ваш аккаунт {{email}} будет удален, после чего вы выйдете из системы.",
         deleteUser: "Удалить пользователя",
+        protectedAdmin: "Защищенный администратор",
+        protectedDemoAdmin: "Защищенный демо-админ",
         loadError: "Не удалось управлять пользователями",
       },
     },

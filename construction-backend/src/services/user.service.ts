@@ -6,6 +6,9 @@ export const roles = ["ADMIN", "MANAGER", "WORKER"] as const;
 export type Role = (typeof roles)[number];
 
 const passwordSaltRounds = 10;
+const defaultProtectedAdminEmail = "admin@test.com";
+const minPhoneDigits = 10;
+const maxPhoneDigits = 15;
 
 export const userService = {
   async createUser(data: UserCreateInput) {
@@ -22,7 +25,7 @@ export const userService = {
       password: passwordHash,
       firstName: normalizeOptionalContactField(data.firstName),
       lastName: normalizeOptionalContactField(data.lastName),
-      phone: normalizeOptionalContactField(data.phone),
+      phone: normalizeOptionalPhone(data.phone),
       role: data.role,
     });
   },
@@ -45,7 +48,11 @@ export const userService = {
     id: number,
     data: UserUpdateInput,
   ) {
-    await this.getUser(id);
+    const user = await this.getUser(id);
+
+    if (isProtectedAdmin(user.email)) {
+      throw forbidden("Demo admin account cannot be modified");
+    }
 
     const updateData: UserUpdateData = {};
 
@@ -71,7 +78,7 @@ export const userService = {
     }
 
     if (data.phone !== undefined) {
-      updateData.phone = normalizeOptionalContactField(data.phone);
+      updateData.phone = normalizeOptionalPhone(data.phone);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -81,12 +88,16 @@ export const userService = {
     return userRepository.updateById(id, updateData);
   },
 
-  async deleteUser(id: number, currentUserId?: number) {
-    if (currentUserId === id) {
-      throw forbidden("You cannot delete your own user account");
+  async deleteUser(id: number, currentUser?: { id: number; role: Role }) {
+    const user = await this.getUser(id);
+
+    if (isProtectedAdmin(user.email)) {
+      throw forbidden("Demo admin account cannot be deleted");
     }
 
-    await this.getUser(id);
+    if (user.role === "ADMIN" && currentUser?.id !== id) {
+      throw forbidden("Admins cannot delete other admin accounts");
+    }
 
     return userRepository.deleteById(id);
   },
@@ -141,4 +152,36 @@ function normalizeOptionalContactField(value: string | null | undefined) {
   const trimmedValue = value.trim();
 
   return trimmedValue || null;
+}
+
+function normalizeOptionalPhone(value: string | null | undefined) {
+  const phone = normalizeOptionalContactField(value);
+
+  if (!phone) {
+    return null;
+  }
+
+  if (!/^\+?[\d\s().-]+$/.test(phone)) {
+    throw badRequest("phone can contain only digits and phone formatting symbols");
+  }
+
+  const digitCount = phone.replace(/\D/g, "").length;
+
+  if (digitCount < minPhoneDigits || digitCount > maxPhoneDigits) {
+    throw badRequest("phone must contain 10 to 15 digits");
+  }
+
+  return phone;
+}
+
+function getProtectedAdminEmail() {
+  return normalizeEmailForComparison(process.env.SEED_ADMIN_EMAIL || defaultProtectedAdminEmail);
+}
+
+function isProtectedAdmin(email: string) {
+  return normalizeEmailForComparison(email) === getProtectedAdminEmail();
+}
+
+function normalizeEmailForComparison(email: string) {
+  return email.trim().toLowerCase();
 }

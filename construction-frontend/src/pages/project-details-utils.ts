@@ -37,30 +37,6 @@ export function canUpdateTaskStatus(
   return user.role === "WORKER" && task.assigneeId === user.id;
 }
 
-export function getNextStatuses(status: TaskStatus): TaskStatus[] {
-  if (status === "NEW") {
-    return ["IN_PROGRESS", "DONE"];
-  }
-
-  if (status === "IN_PROGRESS") {
-    return ["DONE"];
-  }
-
-  return [];
-}
-
-export function getStatusActionLabel(status: TaskStatus) {
-  if (status === "IN_PROGRESS") {
-    return "Start";
-  }
-
-  if (status === "DONE") {
-    return "Mark done";
-  }
-
-  return status;
-}
-
 export function filterTasks(
   tasks: ProjectTask[],
   statusFilter: TaskStatus | "ALL",

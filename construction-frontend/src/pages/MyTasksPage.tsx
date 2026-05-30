@@ -10,9 +10,10 @@ import { getUserDisplayName } from "../utils/user-display";
 import {
   canUpdateTaskStatus,
   formatDate,
-  getNextStatuses,
   getTaskSummary,
 } from "./project-details-utils";
+
+const taskStatusOptions: TaskStatus[] = ["NEW", "IN_PROGRESS", "DONE"];
 
 export function MyTasksPage() {
   const { user } = useAuth();
@@ -204,18 +205,22 @@ export function MyTasksPage() {
                 </div>
 
                 {user?.role !== "MANAGER" && canUpdateTaskStatus(task, user) ? (
-                  <div className="task-actions">
-                    {getNextStatuses(task.status).map((status) => (
-                      <button
-                        disabled={updatingTaskId === task.id}
-                        key={status}
-                        onClick={() => handleUpdateTaskStatus(task, status)}
-                        type="button"
-                      >
-                        {updatingTaskId === task.id ? t("common.updating") : t(`statusActions.${status}`)}
-                      </button>
-                    ))}
-                  </div>
+                  <label className="status-select-control">
+                    {t("tasks.status")}
+                    <select
+                      disabled={updatingTaskId === task.id}
+                      onChange={(event) =>
+                        handleUpdateTaskStatus(task, event.target.value as TaskStatus)
+                      }
+                      value={task.status}
+                    >
+                      {taskStatusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {t(`statuses.${status}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 ) : null}
               </article>
             ))}

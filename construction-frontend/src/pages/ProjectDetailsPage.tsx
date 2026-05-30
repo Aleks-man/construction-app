@@ -22,6 +22,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PasswordInput } from "../components/PasswordInput";
 import { PencilIcon } from "../components/PencilIcon";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { isValidOptionalPhone } from "../utils/phone";
 import { getUserDisplayName } from "../utils/user-display";
 import { StageColumn } from "./StageColumn";
 import type { TaskEditDraft } from "./TaskCard";
@@ -47,6 +48,7 @@ export function ProjectDetailsPage() {
   const [taskDrafts, setTaskDrafts] = useState<Record<number, TaskDraft>>({});
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [newUserDraft, setNewUserDraft] = useState<UserDraft>(createEmptyUserDraft());
+  const [isNewUserPhoneTouched, setIsNewUserPhoneTouched] = useState(false);
   const [taskStatusFilter, setTaskStatusFilter] = useState<TaskStatus | "ALL">("ALL");
   const [taskPriorityFilter, setTaskPriorityFilter] = useState<TaskPriority | "ALL">("ALL");
   const [error, setError] = useState("");
@@ -255,9 +257,15 @@ export function ProjectDetailsPage() {
     const email = newUserDraft.email.trim();
     const password = newUserDraft.password.trim();
     const firstName = newUserDraft.firstName.trim();
-    const lastName = newUserDraft.lastName.trim();
+  const lastName = newUserDraft.lastName.trim();
+
+    setIsNewUserPhoneTouched(true);
 
     if (!firstName || !lastName || !email || !password) {
+      return;
+    }
+
+    if (!isValidOptionalPhone(newUserDraft.phone)) {
       return;
     }
 
@@ -276,6 +284,7 @@ export function ProjectDetailsPage() {
       setUsers((currentUsers) => [createdUser, ...currentUsers]);
       setSelectedMemberId(String(createdUser.id));
       setNewUserDraft(createEmptyUserDraft());
+      setIsNewUserPhoneTouched(false);
     } catch (userError) {
       setError(getProjectErrorMessage(userError, t("users.loadError")));
     } finally {
@@ -577,6 +586,8 @@ export function ProjectDetailsPage() {
       !project.users.some((member) => member.userId === availableUser.id) &&
       (user?.role === "ADMIN" || availableUser.role === "WORKER"),
   );
+  const isNewUserPhoneValid = isValidOptionalPhone(newUserDraft.phone);
+  const shouldShowNewUserPhoneError = !isNewUserPhoneValid && isNewUserPhoneTouched;
 
   return (
     <main className="app-shell">
@@ -900,7 +911,9 @@ export function ProjectDetailsPage() {
               <label>
                 {t("projectDetails.phone")}
                 <input
+                  aria-invalid={shouldShowNewUserPhoneError}
                   autoComplete="tel"
+                  onBlur={() => setIsNewUserPhoneTouched(true)}
                   onChange={(event) =>
                     setNewUserDraft((currentDraft) => ({
                       ...currentDraft,
@@ -911,6 +924,9 @@ export function ProjectDetailsPage() {
                   type="tel"
                   value={newUserDraft.phone}
                 />
+                {shouldShowNewUserPhoneError ? (
+                  <span className="field-error">{t("projectDetails.phoneValidation")}</span>
+                ) : null}
               </label>
 
               <label>
@@ -968,6 +984,7 @@ export function ProjectDetailsPage() {
                   !newUserDraft.firstName.trim() ||
                   !newUserDraft.lastName.trim() ||
                   !newUserDraft.email.trim() ||
+                  !isNewUserPhoneValid ||
                   newUserDraft.password.trim().length < 6
                 }
                 type="submit"

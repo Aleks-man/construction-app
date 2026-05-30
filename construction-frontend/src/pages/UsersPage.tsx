@@ -6,12 +6,14 @@ import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PasswordInput } from "../components/PasswordInput";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { isValidOptionalPhone } from "../utils/phone";
 import { getUserDisplayName } from "../utils/user-display";
 
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
+const demoAdminEmail = (import.meta.env.VITE_DEMO_ADMIN_EMAIL || "admin@test.com").toLowerCase();
 
 export function UsersPage() {
-  const { user } = useAuth();
+  const { logout, user } = useAuth();
   const { i18n, t } = useTranslation();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [activeRole, setActiveRole] = useState<UserRole>("WORKER");
@@ -20,6 +22,7 @@ export function UsersPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [isPhoneTouched, setIsPhoneTouched] = useState(false);
   const [role, setRole] = useState<UserRole>("WORKER");
   const [userToDelete, setUserToDelete] = useState<AppUser | null>(null);
   const [error, setError] = useState("");
@@ -32,6 +35,8 @@ export function UsersPage() {
     () => users.filter((appUser) => appUser.role === activeRole),
     [activeRole, users],
   );
+  const isPhoneValid = isValidOptionalPhone(phone);
+  const shouldShowPhoneError = !isPhoneValid && isPhoneTouched;
 
   const roleCounts = useMemo(
     () =>
@@ -89,6 +94,12 @@ export function UsersPage() {
     event.preventDefault();
     setError("");
     setSuccessMessage("");
+    setIsPhoneTouched(true);
+
+    if (!isPhoneValid) {
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -107,6 +118,7 @@ export function UsersPage() {
       setFirstName("");
       setLastName("");
       setPhone("");
+      setIsPhoneTouched(false);
       setRole("WORKER");
       setActiveRole(createdUser.role);
       setSuccessMessage(t("users.createdMessage", { email: createdUser.email }));
@@ -133,6 +145,12 @@ export function UsersPage() {
         currentUsers.filter((appUser) => appUser.id !== deletedUser.id),
       );
       setUserToDelete(null);
+
+      if (deletedUser.id === user?.id) {
+        logout();
+        return;
+      }
+
       setSuccessMessage(t("users.deletedMessage", { email: deletedUser.email }));
     } catch (deleteError) {
       setError(getUserErrorMessage(deleteError, t("users.loadError")));
@@ -182,11 +200,16 @@ export function UsersPage() {
             {t("users.phone")}
             <input
               autoComplete="tel"
+              aria-invalid={shouldShowPhoneError}
+              onBlur={() => setIsPhoneTouched(true)}
               onChange={(event) => setPhone(event.target.value)}
               placeholder={t("users.phonePlaceholder")}
               type="tel"
               value={phone}
             />
+            {shouldShowPhoneError ? (
+              <span className="field-error">{t("users.phoneValidation")}</span>
+            ) : null}
           </label>
 
           <label>
@@ -230,6 +253,7 @@ export function UsersPage() {
               !firstName.trim() ||
               !lastName.trim() ||
               !email.trim() ||
+              !isPhoneValid ||
               password.length < 6
             }
             type="submit"
@@ -286,6 +310,8 @@ export function UsersPage() {
           <div className="users-list">
             {visibleUsers.map((appUser) => {
               const isCurrentUser = appUser.id === user.id;
+              const isDemoAdmin = appUser.email.toLowerCase() === demoAdminEmail;
+              const isProtectedAdmin = appUser.role === "ADMIN" && !isCurrentUser;
 
               return (
                 <article className="user-card" key={appUser.id}>
@@ -306,16 +332,23 @@ export function UsersPage() {
                     </p>
                   </div>
 
-                  {isCurrentUser ? (
-                    <span className="current-user-badge">{t("common.currentUser")}</span>
+                  {isDemoAdmin || isProtectedAdmin ? (
+                    <span className="current-user-badge">
+                      {isDemoAdmin ? t("users.protectedDemoAdmin") : t("users.protectedAdmin")}
+                    </span>
                   ) : (
-                    <button
-                      className="danger-button"
-                      onClick={() => setUserToDelete(appUser)}
-                      type="button"
-                    >
-                      {t("common.delete")}
-                    </button>
+                    <div className="user-card-actions">
+                      {isCurrentUser ? (
+                        <span className="current-user-badge">{t("common.currentUser")}</span>
+                      ) : null}
+                      <button
+                        className="danger-button"
+                        onClick={() => setUserToDelete(appUser)}
+                        type="button"
+                      >
+                        {t("common.delete")}
+                      </button>
+                    </div>
                   )}
                 </article>
               );
@@ -330,7 +363,13 @@ export function UsersPage() {
         confirmingLabel={t("common.deleting")}
         isConfirming={isDeleting}
         isOpen={Boolean(userToDelete)}
-        message={userToDelete ? t("users.deleteMessage", { email: userToDelete.email }) : ""}
+        message={
+          userToDelete
+            ? t(userToDelete.id === user?.id ? "users.deleteSelfMessage" : "users.deleteMessage", {
+                email: userToDelete.email,
+              })
+            : ""
+        }
         onCancel={() => setUserToDelete(null)}
         onConfirm={handleDeleteUser}
         title={t("users.deleteTitle")}

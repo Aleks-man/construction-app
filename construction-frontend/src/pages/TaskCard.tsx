@@ -4,7 +4,9 @@ import type { Project, ProjectTask, TaskPriority, TaskStatus } from "../api/proj
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PencilIcon } from "../components/PencilIcon";
 import { getUserDisplayName } from "../utils/user-display";
-import { formatDate, getNextStatuses } from "./project-details-utils";
+import { formatDate } from "./project-details-utils";
+
+const taskStatusOptions: TaskStatus[] = ["NEW", "IN_PROGRESS", "DONE"];
 
 export function TaskCard({
   canManageTask,
@@ -33,7 +35,6 @@ export function TaskCard({
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [taskDraft, setTaskDraft] = useState<TaskEditDraft>(() => createTaskEditDraft(task));
-  const nextStatuses = getNextStatuses(task.status);
 
   const handleUpdateTask: ComponentProps<"form">["onSubmit"] = async (event) => {
     event.preventDefault();
@@ -208,19 +209,21 @@ export function TaskCard({
         </div>
       ) : null}
 
-      {canUpdateStatus && nextStatuses.length > 0 ? (
-        <div className="task-actions">
-          {nextStatuses.map((status) => (
-            <button
-              disabled={isUpdating}
-              key={status}
-              onClick={() => onUpdateStatus(status)}
-              type="button"
-            >
-              {t(`statusActions.${status}`)}
-            </button>
-          ))}
-        </div>
+      {canUpdateStatus ? (
+        <label className="status-select-control">
+          {t("tasks.status")}
+          <select
+            disabled={isUpdating}
+            onChange={(event) => onUpdateStatus(event.target.value as TaskStatus)}
+            value={task.status}
+          >
+            {taskStatusOptions.map((status) => (
+              <option key={status} value={status}>
+                {t(`statuses.${status}`)}
+              </option>
+            ))}
+          </select>
+        </label>
       ) : null}
     </article>
   );
