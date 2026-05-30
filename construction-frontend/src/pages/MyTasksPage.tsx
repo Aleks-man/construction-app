@@ -203,7 +203,7 @@ export function MyTasksPage() {
                   <span>{task.stage.name}</span>
                 </div>
 
-                {canUpdateTaskStatus(task, user) ? (
+                {user?.role !== "MANAGER" && canUpdateTaskStatus(task, user) ? (
                   <div className="task-actions">
                     {getNextStatuses(task.status).map((status) => (
                       <button

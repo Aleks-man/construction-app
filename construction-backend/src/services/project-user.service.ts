@@ -3,6 +3,7 @@ import { projectRepository } from "../repositories/project.repository";
 import { projectUserRepository } from "../repositories/project-user.repository";
 import { userRepository } from "../repositories/user.repository";
 import { activityService, type ActivityActor } from "./activity.service";
+import { ensureActorCanManageProject } from "./project-permission.service";
 
 export const projectUserService = {
   getProjectUsers(projectId?: number) {
@@ -12,8 +13,12 @@ export const projectUserService = {
   async addUserToProject(projectId: number, userId: number, actor?: ActivityActor) {
     const user = await ensureProjectAndUserExist(projectId, userId);
 
-    if (actor?.role === "MANAGER" && user.role !== "WORKER") {
-      throw forbidden("Managers can add only worker users to projects");
+    if (actor?.role === "MANAGER") {
+      await ensureActorCanManageProject(projectId, actor);
+
+      if (user.role !== "WORKER") {
+        throw forbidden("Managers can add only worker users to projects");
+      }
     }
 
     const existing = await projectUserRepository.findByIds(projectId, userId);
@@ -41,6 +46,14 @@ export const projectUserService = {
 
     if (!existing) {
       throw notFound("Project user was not found");
+    }
+
+    if (actor?.role === "MANAGER") {
+      await ensureActorCanManageProject(projectId, actor);
+
+      if (existing.user.role !== "WORKER") {
+        throw forbidden("Managers can remove only worker users from projects");
+      }
     }
 
     const projectUser = await projectUserRepository.deleteByIds(projectId, userId);

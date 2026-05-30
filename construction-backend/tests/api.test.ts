@@ -180,6 +180,176 @@ describe("API", () => {
       .expect(403);
   });
 
+  it("allows managers to manage members only in their own projects", async () => {
+    const manager = await createTestUser("own-project-manager", "MANAGER");
+    const otherManager = await createTestUser("other-project-manager", "MANAGER");
+    const worker = await createTestUser("own-project-worker", "WORKER");
+    const otherWorker = await createTestUser("other-project-worker", "WORKER");
+    const managerToken = await loginAs(manager);
+
+    const ownProject = await prisma.project.create({
+      data: {
+        name: "API Test Own Project Members",
+        users: {
+          create: [{ userId: manager.id }, { userId: worker.id }],
+        },
+      },
+    });
+    const otherProject = await prisma.project.create({
+      data: {
+        name: "API Test Other Project Members",
+        users: {
+          create: {
+            userId: otherManager.id,
+          },
+        },
+      },
+    });
+
+    await request(app)
+      .post("/project-users")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({ projectId: otherProject.id, userId: otherWorker.id })
+      .expect(403);
+
+    await request(app)
+      .delete(`/project-users/${ownProject.id}/${worker.id}`)
+      .set("Authorization", `Bearer ${managerToken}`)
+      .expect(200);
+
+    await request(app)
+      .delete(`/project-users/${otherProject.id}/${otherManager.id}`)
+      .set("Authorization", `Bearer ${managerToken}`)
+      .expect(403);
+  });
+
+  it("allows managers to edit stages and tasks only in their own projects", async () => {
+    const manager = await createTestUser("own-work-manager", "MANAGER");
+    const worker = await createTestUser("own-work-worker", "WORKER");
+    const managerToken = await loginAs(manager);
+
+    const ownProject = await prisma.project.create({
+      data: {
+        name: "API Test Own Work Project",
+        users: {
+          create: [{ userId: manager.id }, { userId: worker.id }],
+        },
+        stages: {
+          create: {
+            name: "API Test Own Work Stage",
+          },
+        },
+      },
+      include: {
+        stages: true,
+      },
+    });
+    const otherProject = await prisma.project.create({
+      data: {
+        name: "API Test Other Work Project",
+        stages: {
+          create: {
+            name: "API Test Other Work Stage",
+            tasks: {
+              create: {
+                title: "API Test Other Work Task",
+              },
+            },
+          },
+        },
+      },
+      include: {
+        stages: {
+          include: {
+            tasks: true,
+          },
+        },
+      },
+    });
+
+    await request(app)
+      .post("/stages")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({ projectId: ownProject.id, name: "API Test Manager Stage" })
+      .expect(201);
+
+    await request(app)
+      .post("/stages")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({ projectId: otherProject.id, name: "API Test Forbidden Stage" })
+      .expect(403);
+
+    await request(app)
+      .post("/tasks")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        title: "API Test Manager Task",
+        stageId: ownProject.stages[0].id,
+        assigneeId: worker.id,
+      })
+      .expect(201);
+
+    await request(app)
+      .patch(`/tasks/${otherProject.stages[0].tasks[0].id}`)
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({ title: "API Test Forbidden Task Rename" })
+      .expect(403);
+  });
+
+  it("returns only assigned project tasks for managers", async () => {
+    const manager = await createTestUser("scoped-tasks-manager", "MANAGER");
+    const managerToken = await loginAs(manager);
+
+    const ownProject = await prisma.project.create({
+      data: {
+        name: "API Test Scoped Own Project",
+        users: {
+          create: {
+            userId: manager.id,
+          },
+        },
+        stages: {
+          create: {
+            name: "API Test Scoped Own Stage",
+            tasks: {
+              create: {
+                title: "API Test Scoped Own Task",
+              },
+            },
+          },
+        },
+      },
+    });
+    await prisma.project.create({
+      data: {
+        name: "API Test Scoped Other Project",
+        stages: {
+          create: {
+            name: "API Test Scoped Other Stage",
+            tasks: {
+              create: {
+                title: "API Test Scoped Other Task",
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const tasksResponse = await request(app)
+      .get("/tasks")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .expect(200);
+
+    expect(tasksResponse.body).toHaveLength(1);
+    expect(tasksResponse.body[0]).toMatchObject({
+      title: "API Test Scoped Own Task",
+      stage: {
+        projectId: ownProject.id,
+      },
+    });
+  });
+
   it("allows assigned workers to update only their own task status", async () => {
     const adminToken = await loginAs(await createTestUser("task-admin", "ADMIN"));
     const assignedWorker = await createTestUser("assigned-worker", "WORKER");

@@ -58,7 +58,7 @@ export const taskController = {
           typeof req.query.dueAfter === "string"
             ? optionalDateTime(req.query.dueAfter, "dueAfter")
             : undefined,
-      });
+      }, req.user);
 
       res.json(tasks);
     } catch (error) {

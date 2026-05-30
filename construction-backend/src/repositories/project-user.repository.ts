@@ -31,6 +31,15 @@ export const projectUserRepository = {
     });
   },
 
+  findProjectIdsByUserId(userId: number) {
+    return prisma.projectUser.findMany({
+      where: { userId },
+      select: {
+        projectId: true,
+      },
+    });
+  },
+
   findByIds(projectId: number, userId: number) {
     return prisma.projectUser.findUnique({
       where: {

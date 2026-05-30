@@ -43,6 +43,7 @@ export const taskRepository = {
   findAll(filters: {
     stageId?: number;
     assigneeId?: number;
+    projectIds?: number[];
     status?: "NEW" | "IN_PROGRESS" | "DONE";
     priority?: "LOW" | "MEDIUM" | "HIGH";
     dueBefore?: Date;
@@ -52,6 +53,13 @@ export const taskRepository = {
       where: {
         stageId: filters.stageId,
         assigneeId: filters.assigneeId,
+        stage: filters.projectIds
+          ? {
+              projectId: {
+                in: filters.projectIds,
+              },
+            }
+          : undefined,
         status: filters.status,
         priority: filters.priority,
         dueDate:

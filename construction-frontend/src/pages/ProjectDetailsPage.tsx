@@ -20,6 +20,7 @@ import { createUser, getUsers, type AppUser, type UserRole } from "../api/users"
 import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PasswordInput } from "../components/PasswordInput";
+import { PencilIcon } from "../components/PencilIcon";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { getUserDisplayName } from "../utils/user-display";
 import { StageColumn } from "./StageColumn";
@@ -56,6 +57,7 @@ export function ProjectDetailsPage() {
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<Project["users"][number] | null>(null);
   const [isEditingProjectName, setIsEditingProjectName] = useState(false);
   const [isUpdatingProjectName, setIsUpdatingProjectName] = useState(false);
   const [isCreatingStage, setIsCreatingStage] = useState(false);
@@ -67,13 +69,7 @@ export function ProjectDetailsPage() {
   const [savingTaskId, setSavingTaskId] = useState<number | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
-  const canEditProject = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canDeleteProject = user?.role === "ADMIN";
-  const canCreateStage = user?.role === "ADMIN" || user?.role === "MANAGER";
-  const canManageStages = user?.role === "ADMIN" || user?.role === "MANAGER";
-  const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
-  const canManageTasks = user?.role === "ADMIN" || user?.role === "MANAGER";
-  const canManageMembers = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canCreateUsers = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canSelectNewUserRole = user?.role === "ADMIN";
   const parsedProjectId = useMemo(() => Number(projectId), [projectId]);
@@ -315,20 +311,21 @@ export function ProjectDetailsPage() {
     }
   };
 
-  async function handleRemoveMember(userId: number) {
-    if (!project) {
+  async function handleRemoveMember() {
+    if (!project || !memberToRemove) {
       return;
     }
 
     setError("");
-    setRemovingMemberId(userId);
+    setRemovingMemberId(memberToRemove.userId);
 
     try {
-      await removeProjectUser(project.id, userId);
+      await removeProjectUser(project.id, memberToRemove.userId);
       setProject({
         ...project,
-        users: project.users.filter((member) => member.userId !== userId),
+        users: project.users.filter((member) => member.userId !== memberToRemove.userId),
       });
+      setMemberToRemove(null);
       await refreshProjectActivity(project.id);
     } catch (memberError) {
       setError(getProjectErrorMessage(memberError, t("projectDetails.unavailableMessage")));
@@ -456,6 +453,17 @@ export function ProjectDetailsPage() {
     }
   };
 
+  const handleProjectNameEditKeyDown: ComponentProps<"form">["onKeyDown"] = (event) => {
+    if (event.key !== "Escape" || !project) {
+      return;
+    }
+
+    event.preventDefault();
+    setProjectNameDraft(project.name);
+    setIsEditingProjectName(false);
+    setError("");
+  };
+
   async function handleUpdateStageName(stageId: number, name: string) {
     if (!project) {
       return false;
@@ -553,6 +561,17 @@ export function ProjectDetailsPage() {
   const tasks = project.stages.flatMap((stage) => stage.tasks);
   const visibleTasks = filterTasks(tasks, taskStatusFilter, taskPriorityFilter);
   const taskSummary = getTaskSummary(tasks);
+  const isCurrentUserProjectMember = project.users.some((member) => member.userId === user?.id);
+  const canManageCurrentProject =
+    user?.role === "ADMIN" || (user?.role === "MANAGER" && isCurrentUserProjectMember);
+  const canEditProject = canManageCurrentProject;
+  const canCreateStage = canManageCurrentProject;
+  const canManageStages = canManageCurrentProject;
+  const canCreateTask = canManageCurrentProject;
+  const canManageTasks = canManageCurrentProject;
+  const canManageCurrentProjectMembers =
+    canManageCurrentProject;
+  const canCreateProjectUsers = canCreateUsers && canManageCurrentProjectMembers;
   const availableUsers = users.filter(
     (availableUser) =>
       !project.users.some((member) => member.userId === availableUser.id) &&
@@ -569,7 +588,11 @@ export function ProjectDetailsPage() {
         <div>
           <p className="eyebrow">{t("projectDetails.projectEyebrow", { id: project.id })}</p>
           {isEditingProjectName ? (
-            <form className="project-edit-form" onSubmit={handleUpdateProjectName}>
+            <form
+              className="project-edit-form"
+              onKeyDown={handleProjectNameEditKeyDown}
+              onSubmit={handleUpdateProjectName}
+            >
               <label>
                 {t("projectDetails.projectName")}
                 <input
@@ -605,15 +628,17 @@ export function ProjectDetailsPage() {
               <h1>{project.name}</h1>
               {canEditProject ? (
                 <button
-                  className="secondary-button project-edit-button"
+                  aria-label={t("common.edit")}
+                  className="icon-button project-edit-button"
                   onClick={() => {
                     setProjectNameDraft(project.name);
                     setIsEditingProjectName(true);
                     setError("");
                   }}
+                  title={t("common.edit")}
                   type="button"
                 >
-                  {t("common.edit")}
+                  <PencilIcon />
                 </button>
               ) : null}
             </div>
@@ -783,11 +808,12 @@ export function ProjectDetailsPage() {
                   </details>
                   <strong>{t(`roles.${member.user.role}`)}</strong>
                 </div>
-                {canManageMembers ? (
+                {canManageCurrentProjectMembers &&
+                (user?.role === "ADMIN" || member.user.role === "WORKER") ? (
                   <button
                     className="danger-button"
                     disabled={removingMemberId === member.userId}
-                    onClick={() => handleRemoveMember(member.userId)}
+                    onClick={() => setMemberToRemove(member)}
                     type="button"
                   >
                     {removingMemberId === member.userId ? t("common.removing") : t("common.remove")}
@@ -800,7 +826,7 @@ export function ProjectDetailsPage() {
           <p className="muted">{t("projectDetails.noMembers")}</p>
         )}
 
-        {canCreateUsers ? (
+        {canCreateProjectUsers ? (
           <div className="team-management">
             <form className="member-form" onSubmit={handleAddMember}>
               <label>
@@ -950,12 +976,30 @@ export function ProjectDetailsPage() {
               </button>
             </form>
           </div>
-        ) : canManageMembers ? (
+        ) : canManageCurrentProjectMembers ? (
           <p className="muted team-note">
             {t("projectDetails.userCreationNote")}
           </p>
         ) : null}
       </section>
+
+      <ConfirmDialog
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("projectDetails.removeMember")}
+        confirmingLabel={t("common.removing")}
+        isConfirming={Boolean(removingMemberId)}
+        isOpen={Boolean(memberToRemove)}
+        message={
+          memberToRemove
+            ? t("projectDetails.removeMemberMessage", {
+                name: getUserDisplayName(memberToRemove.user),
+              })
+            : ""
+        }
+        onCancel={() => setMemberToRemove(null)}
+        onConfirm={handleRemoveMember}
+        title={t("projectDetails.removeMemberTitle")}
+      />
 
       {canCreateStage ? (
         <section className="panel">
@@ -993,6 +1037,7 @@ export function ProjectDetailsPage() {
               canCreateTask={canCreateTask}
               canManageTask={canManageTasks}
               canManageStage={canManageStages}
+              canUpdateTaskStatusInProject={canManageCurrentProject || user?.role === "WORKER"}
               deletingTaskId={deletingTaskId}
               deletingStageId={deletingStageId}
               key={stage.id}

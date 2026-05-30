@@ -1,6 +1,7 @@
 import { projectRepository } from "../repositories/project.repository";
 import { badRequest, conflict, notFound } from "../errors/http-error";
 import { activityService, type ActivityActor } from "./activity.service";
+import { ensureActorCanManageProject } from "./project-permission.service";
 
 export const projectService = {
   async createProject(name: string, actor?: ActivityActor) {
@@ -42,6 +43,7 @@ export const projectService = {
 
   async updateProject(id: number, name: string, actor?: ActivityActor) {
     const existingProject = await this.getProject(id);
+    await ensureActorCanManageProject(id, actor);
 
     const trimmedName = name.trim();
 

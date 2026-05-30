@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectStage, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { PencilIcon } from "../components/PencilIcon";
 import {
   canUpdateTaskStatus,
   filterTasks,
@@ -14,6 +15,7 @@ export function StageColumn({
   canCreateTask,
   canManageTask,
   canManageStage,
+  canUpdateTaskStatusInProject,
   deletingTaskId,
   deletingStageId,
   isCreatingTask,
@@ -37,6 +39,7 @@ export function StageColumn({
   canCreateTask: boolean;
   canManageTask: boolean;
   canManageStage: boolean;
+  canUpdateTaskStatusInProject: boolean;
   deletingTaskId: number | null;
   deletingStageId: number | null;
   isCreatingTask: boolean;
@@ -83,6 +86,16 @@ export function StageColumn({
     }
   };
 
+  const handleStageNameEditKeyDown: ComponentProps<"form">["onKeyDown"] = (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    event.preventDefault();
+    setStageNameDraft(stage.name);
+    setIsEditingStageName(false);
+  };
+
   async function handleDeleteStage() {
     const isDeleted = await onDeleteStage(stage.id);
 
@@ -95,7 +108,11 @@ export function StageColumn({
     <article className="stage-column">
       <div className="stage-header">
         {isEditingStageName ? (
-          <form className="stage-edit-form" onSubmit={handleUpdateStageName}>
+          <form
+            className="stage-edit-form"
+            onKeyDown={handleStageNameEditKeyDown}
+            onSubmit={handleUpdateStageName}
+          >
             <label>
               {t("stage.name")}
               <input
@@ -128,14 +145,16 @@ export function StageColumn({
               {canManageStage ? (
                 <div className="stage-actions">
                   <button
-                    className="text-button"
+                    aria-label={t("common.edit")}
+                    className="icon-button"
                     onClick={() => {
                       setStageNameDraft(stage.name);
                       setIsEditingStageName(true);
                     }}
+                    title={t("common.edit")}
                     type="button"
                   >
-                    {t("common.edit")}
+                    <PencilIcon />
                   </button>
                   <button
                     className="text-button danger-text-button"
@@ -170,7 +189,9 @@ export function StageColumn({
           {visibleStageTasks.map((task) => (
             <TaskCard
               canManageTask={canManageTask}
-              canUpdateStatus={canUpdateTaskStatus(task, user)}
+              canUpdateStatus={
+                canUpdateTaskStatusInProject && canUpdateTaskStatus(task, user)
+              }
               isDeleting={deletingTaskId === task.id}
               isSaving={savingTaskId === task.id}
               isUpdating={updatingTaskId === task.id}
