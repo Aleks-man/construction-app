@@ -37,6 +37,21 @@ export function canUpdateTaskStatus(
   return user.role === "WORKER" && task.assigneeId === user.id;
 }
 
+export function canMoveTaskToStatus(task: ProjectTask, status: TaskStatus) {
+  return status === "NEW" || Boolean(task.assigneeId);
+}
+
+export function getTodayDateInputValue() {
+  const today = new Date();
+  const timezoneOffset = today.getTimezoneOffset() * 60_000;
+
+  return new Date(today.getTime() - timezoneOffset).toISOString().slice(0, 10);
+}
+
+export function isValidTaskDueDateInputValue(value: string) {
+  return !value || value >= getTodayDateInputValue();
+}
+
 export function filterTasks(
   tasks: ProjectTask[],
   statusFilter: TaskStatus | "ALL",

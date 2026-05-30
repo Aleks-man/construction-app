@@ -31,6 +31,8 @@ export const taskService = {
 
     await ensureActorCanManageProject(stage.projectId, actor);
     await ensureAssigneeCanBeAssigned(data.stageId, data.assigneeId);
+    ensureDueDateIsNotPast(data.dueDate);
+    ensureStatusHasAssignee(data.status ?? "NEW", data.assigneeId);
 
     const task = await taskRepository.create({
       title: normalizeTitle(data.title),
@@ -127,6 +129,7 @@ export const taskService = {
     }
 
     if (data.dueDate !== undefined) {
+      ensureDueDateIsNotPast(data.dueDate);
       updateData.dueDate = data.dueDate;
     }
 
@@ -154,6 +157,11 @@ export const taskService = {
         data.assigneeId === undefined ? existingTask.assigneeId : data.assigneeId,
       );
     }
+
+    ensureStatusHasAssignee(
+      data.status ?? existingTask.status,
+      data.assigneeId === undefined ? existingTask.assigneeId : data.assigneeId,
+    );
 
     if (Object.keys(updateData).length === 0) {
       throw badRequest("At least one field is required");
@@ -187,6 +195,8 @@ export const taskService = {
     if (currentUser.role === "WORKER" && task.assigneeId !== currentUser.id) {
       throw forbidden("Workers can update only their assigned tasks");
     }
+
+    ensureStatusHasAssignee(status, task.assigneeId);
 
     const updatedTask = await taskRepository.updateById(id, { status });
 
@@ -263,6 +273,28 @@ function normalizeOptionalText(value: string | null | undefined) {
   const trimmedValue = value.trim();
 
   return trimmedValue || null;
+}
+
+function ensureDueDateIsNotPast(dueDate: Date | null | undefined) {
+  if (!dueDate) {
+    return;
+  }
+
+  if (dueDate < startOfToday()) {
+    throw badRequest("dueDate cannot be in the past");
+  }
+}
+
+function ensureStatusHasAssignee(status: TaskStatus, assigneeId: number | null | undefined) {
+  if (status !== "NEW" && !assigneeId) {
+    throw badRequest("Task must have an assignee before status can be changed");
+  }
+}
+
+function startOfToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
 }
 
 async function ensureAssigneeCanBeAssigned(

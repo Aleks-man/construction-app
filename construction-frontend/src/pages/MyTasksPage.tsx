@@ -8,6 +8,7 @@ import { useAuth } from "../auth/auth-context";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { getUserDisplayName } from "../utils/user-display";
 import {
+  canMoveTaskToStatus,
   canUpdateTaskStatus,
   formatDate,
   getTaskSummary,
@@ -215,7 +216,7 @@ export function MyTasksPage() {
                       value={task.status}
                     >
                       {taskStatusOptions.map((status) => (
-                        <option key={status} value={status}>
+                        <option disabled={!canMoveTaskToStatus(task, status)} key={status} value={status}>
                           {t(`statuses.${status}`)}
                         </option>
                       ))}

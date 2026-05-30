@@ -32,6 +32,7 @@ import {
   formatDate,
   getTaskDraft,
   getTaskSummary,
+  isValidTaskDueDateInputValue,
   type TaskDraft,
 } from "./project-details-utils";
 
@@ -206,7 +207,7 @@ export function ProjectDetailsPage() {
     const draft = getTaskDraft(taskDrafts, stageId);
     const title = draft.title.trim();
 
-    if (!title) {
+    if (!title || !isValidTaskDueDateInputValue(draft.dueDate)) {
       return;
     }
 
@@ -377,7 +378,11 @@ export function ProjectDetailsPage() {
 
     const title = draft.title.trim();
 
-    if (!title) {
+    if (!title || !isValidTaskDueDateInputValue(draft.dueDate)) {
+      return false;
+    }
+
+    if (task.status !== "NEW" && !draft.assigneeId) {
       return false;
     }
 
