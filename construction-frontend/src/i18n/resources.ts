@@ -89,6 +89,7 @@ export const resources = {
         emptyMessage:
           "Create the first project to begin planning stages, tasks and team assignments.",
         cardEyebrow: "Project #{{id}}",
+        memberBadge: "Assigned",
         statsStages: "Stages",
         statsTasks: "Tasks",
         statsMembers: "Members",
@@ -321,6 +322,7 @@ export const resources = {
         emptyMessage:
           "Создайте первый проект, чтобы планировать этапы, задачи и команду.",
         cardEyebrow: "Проект #{{id}}",
+        memberBadge: "Вы назначены",
         statsStages: "Этапы",
         statsTasks: "Задачи",
         statsMembers: "Участники",

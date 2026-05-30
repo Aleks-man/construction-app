@@ -492,6 +492,13 @@ select:focus {
     transform 160ms ease;
 }
 
+.project-card-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
 .project-card:hover {
   border-color: #9fc6c3;
   box-shadow: 0 12px 30px rgba(23, 32, 42, 0.08);
@@ -504,6 +511,18 @@ select:focus {
   line-height: 1.2;
   margin: 0 0 8px;
   overflow-wrap: anywhere;
+}
+
+.membership-badge {
+  background: #e6f4ea;
+  border: 1px solid #b7dfc2;
+  border-radius: 999px;
+  color: #1e7e34;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 7px 10px;
 }
 
 .project-stats {
