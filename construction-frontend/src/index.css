@@ -119,6 +119,7 @@ label {
   font-size: 14px;
   font-weight: 650;
   gap: 8px;
+  position: relative;
 }
 
 input,
@@ -138,6 +139,10 @@ select:focus {
   border-color: #24746f;
   box-shadow: 0 0 0 3px rgba(36, 116, 111, 0.14);
   outline: none;
+}
+
+input[aria-invalid="true"] {
+  border-color: #d92d20;
 }
 
 .password-input-wrap {
@@ -225,6 +230,23 @@ select:focus {
   color: #a8071a;
   margin: 0;
   padding: 10px 12px;
+}
+
+.field-error {
+  background: #fff7f6;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  box-shadow: 0 8px 18px rgba(168, 7, 26, 0.12);
+  color: #a8071a;
+  font-size: 12px;
+  font-weight: 600;
+  left: 0;
+  line-height: 1.35;
+  max-width: min(320px, 100%);
+  padding: 7px 9px;
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 20;
 }
 
 .form-success {

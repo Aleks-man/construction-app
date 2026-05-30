@@ -107,7 +107,7 @@ describe("API", () => {
         password: testPassword,
         firstName: "Alex",
         lastName: "Worker",
-        phone: "+1 555 0100",
+        phone: "+1 555 010 1234",
         role: "WORKER",
       })
       .expect(201);
@@ -116,10 +116,27 @@ describe("API", () => {
       email: expect.stringMatching(testEmailDomain),
       firstName: "Alex",
       lastName: "Worker",
-      phone: "+1 555 0100",
+      phone: "+1 555 010 1234",
       role: "WORKER",
     });
     expect(createUserResponse.body.password).toBeUndefined();
+  });
+
+  it("rejects invalid phone numbers when creating users", async () => {
+    const adminToken = await loginAs(await createTestUser("phone-admin", "ADMIN"));
+
+    await request(app)
+      .post("/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        email: `invalid-phone-worker-${Date.now()}${testEmailDomain}`,
+        password: testPassword,
+        firstName: "Invalid",
+        lastName: "Phone",
+        phone: "12345",
+        role: "WORKER",
+      })
+      .expect(400);
   });
 
   it("allows managers to create only worker users", async () => {

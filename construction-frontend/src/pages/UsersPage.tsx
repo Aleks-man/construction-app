@@ -6,6 +6,7 @@ import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PasswordInput } from "../components/PasswordInput";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { isValidOptionalPhone } from "../utils/phone";
 import { getUserDisplayName } from "../utils/user-display";
 
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
@@ -21,6 +22,7 @@ export function UsersPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [isPhoneTouched, setIsPhoneTouched] = useState(false);
   const [role, setRole] = useState<UserRole>("WORKER");
   const [userToDelete, setUserToDelete] = useState<AppUser | null>(null);
   const [error, setError] = useState("");
@@ -33,6 +35,8 @@ export function UsersPage() {
     () => users.filter((appUser) => appUser.role === activeRole),
     [activeRole, users],
   );
+  const isPhoneValid = isValidOptionalPhone(phone);
+  const shouldShowPhoneError = !isPhoneValid && isPhoneTouched;
 
   const roleCounts = useMemo(
     () =>
@@ -90,6 +94,12 @@ export function UsersPage() {
     event.preventDefault();
     setError("");
     setSuccessMessage("");
+    setIsPhoneTouched(true);
+
+    if (!isPhoneValid) {
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -108,6 +118,7 @@ export function UsersPage() {
       setFirstName("");
       setLastName("");
       setPhone("");
+      setIsPhoneTouched(false);
       setRole("WORKER");
       setActiveRole(createdUser.role);
       setSuccessMessage(t("users.createdMessage", { email: createdUser.email }));
@@ -189,11 +200,16 @@ export function UsersPage() {
             {t("users.phone")}
             <input
               autoComplete="tel"
+              aria-invalid={shouldShowPhoneError}
+              onBlur={() => setIsPhoneTouched(true)}
               onChange={(event) => setPhone(event.target.value)}
               placeholder={t("users.phonePlaceholder")}
               type="tel"
               value={phone}
             />
+            {shouldShowPhoneError ? (
+              <span className="field-error">{t("users.phoneValidation")}</span>
+            ) : null}
           </label>
 
           <label>
@@ -237,6 +253,7 @@ export function UsersPage() {
               !firstName.trim() ||
               !lastName.trim() ||
               !email.trim() ||
+              !isPhoneValid ||
               password.length < 6
             }
             type="submit"

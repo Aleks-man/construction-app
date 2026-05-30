@@ -7,6 +7,8 @@ export type Role = (typeof roles)[number];
 
 const passwordSaltRounds = 10;
 const defaultProtectedAdminEmail = "admin@test.com";
+const minPhoneDigits = 10;
+const maxPhoneDigits = 15;
 
 export const userService = {
   async createUser(data: UserCreateInput) {
@@ -23,7 +25,7 @@ export const userService = {
       password: passwordHash,
       firstName: normalizeOptionalContactField(data.firstName),
       lastName: normalizeOptionalContactField(data.lastName),
-      phone: normalizeOptionalContactField(data.phone),
+      phone: normalizeOptionalPhone(data.phone),
       role: data.role,
     });
   },
@@ -76,7 +78,7 @@ export const userService = {
     }
 
     if (data.phone !== undefined) {
-      updateData.phone = normalizeOptionalContactField(data.phone);
+      updateData.phone = normalizeOptionalPhone(data.phone);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -150,6 +152,26 @@ function normalizeOptionalContactField(value: string | null | undefined) {
   const trimmedValue = value.trim();
 
   return trimmedValue || null;
+}
+
+function normalizeOptionalPhone(value: string | null | undefined) {
+  const phone = normalizeOptionalContactField(value);
+
+  if (!phone) {
+    return null;
+  }
+
+  if (!/^\+?[\d\s().-]+$/.test(phone)) {
+    throw badRequest("phone can contain only digits and phone formatting symbols");
+  }
+
+  const digitCount = phone.replace(/\D/g, "").length;
+
+  if (digitCount < minPhoneDigits || digitCount > maxPhoneDigits) {
+    throw badRequest("phone must contain 10 to 15 digits");
+  }
+
+  return phone;
 }
 
 function getProtectedAdminEmail() {
