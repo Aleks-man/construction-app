@@ -4,7 +4,12 @@ import type { Project, ProjectTask, TaskPriority, TaskStatus } from "../api/proj
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PencilIcon } from "../components/PencilIcon";
 import { getUserDisplayName } from "../utils/user-display";
-import { formatDate } from "./project-details-utils";
+import {
+  canMoveTaskToStatus,
+  formatDate,
+  getTodayDateInputValue,
+  isValidTaskDueDateInputValue,
+} from "./project-details-utils";
 
 const taskStatusOptions: TaskStatus[] = ["NEW", "IN_PROGRESS", "DONE"];
 
@@ -34,10 +39,19 @@ export function TaskCard({
   const { i18n, t } = useTranslation();
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDueDateTouched, setIsDueDateTouched] = useState(false);
   const [taskDraft, setTaskDraft] = useState<TaskEditDraft>(() => createTaskEditDraft(task));
+  const isDueDateValid = isValidTaskDueDateInputValue(taskDraft.dueDate);
+  const shouldShowDueDateError = !isDueDateValid && isDueDateTouched;
+  const hasRequiredAssigneeForCurrentStatus = task.status === "NEW" || Boolean(taskDraft.assigneeId);
 
   const handleUpdateTask: ComponentProps<"form">["onSubmit"] = async (event) => {
     event.preventDefault();
+    setIsDueDateTouched(true);
+
+    if (!isDueDateValid || !hasRequiredAssigneeForCurrentStatus) {
+      return;
+    }
 
     const isUpdated = await onUpdateTask(task, taskDraft);
 
@@ -53,6 +67,7 @@ export function TaskCard({
 
     event.preventDefault();
     setTaskDraft(createTaskEditDraft(task));
+    setIsDueDateTouched(false);
     setIsEditingTask(false);
   };
 
@@ -110,10 +125,16 @@ export function TaskCard({
             <label>
               {t("tasks.dueDate")}
               <input
+                aria-invalid={shouldShowDueDateError}
+                min={getTodayDateInputValue()}
+                onBlur={() => setIsDueDateTouched(true)}
                 onChange={(event) => setTaskDraft({ ...taskDraft, dueDate: event.target.value })}
                 type="date"
                 value={taskDraft.dueDate}
               />
+              {shouldShowDueDateError ? (
+                <span className="field-error">{t("tasks.dueDateValidation")}</span>
+              ) : null}
             </label>
           </div>
 
@@ -130,6 +151,9 @@ export function TaskCard({
                 </option>
               ))}
             </select>
+            {!hasRequiredAssigneeForCurrentStatus ? (
+              <span className="field-error">{t("tasks.statusRequiresAssignee")}</span>
+            ) : null}
           </label>
 
           <div className="compact-actions">
@@ -138,13 +162,22 @@ export function TaskCard({
               disabled={isSaving}
               onClick={() => {
                 setTaskDraft(createTaskEditDraft(task));
+                setIsDueDateTouched(false);
                 setIsEditingTask(false);
               }}
               type="button"
             >
               {t("common.cancel")}
             </button>
-            <button disabled={isSaving || !taskDraft.title.trim()} type="submit">
+            <button
+              disabled={
+                isSaving ||
+                !taskDraft.title.trim() ||
+                !isDueDateValid ||
+                !hasRequiredAssigneeForCurrentStatus
+              }
+              type="submit"
+            >
               {isSaving ? t("common.saving") : t("common.save")}
             </button>
           </div>
@@ -187,6 +220,7 @@ export function TaskCard({
             className="icon-button"
             onClick={() => {
               setTaskDraft(createTaskEditDraft(task));
+              setIsDueDateTouched(false);
               setIsEditingTask(true);
               setIsConfirmingDelete(false);
             }}
@@ -218,7 +252,7 @@ export function TaskCard({
             value={task.status}
           >
             {taskStatusOptions.map((status) => (
-              <option key={status} value={status}>
+              <option disabled={!canMoveTaskToStatus(task, status)} key={status} value={status}>
                 {t(`statuses.${status}`)}
               </option>
             ))}

@@ -425,6 +425,73 @@ describe("API", () => {
     });
   });
 
+  it("rejects tasks with past due dates", async () => {
+    const adminToken = await loginAs(await createTestUser("past-task-admin", "ADMIN"));
+    const project = await prisma.project.create({
+      data: {
+        name: "API Test Past Due Project",
+        stages: {
+          create: {
+            name: "API Test Past Due Stage",
+          },
+        },
+      },
+      include: {
+        stages: true,
+      },
+    });
+
+    await request(app)
+      .post("/tasks")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        title: "API Test Past Due Task",
+        dueDate: getDateDaysFromNow(-1).toISOString(),
+        stageId: project.stages[0].id,
+      })
+      .expect(400);
+  });
+
+  it("requires an assignee before moving tasks out of new status", async () => {
+    const adminToken = await loginAs(await createTestUser("status-assignee-admin", "ADMIN"));
+    const project = await prisma.project.create({
+      data: {
+        name: "API Test Status Assignee Project",
+        stages: {
+          create: {
+            name: "API Test Status Assignee Stage",
+            tasks: {
+              create: {
+                title: "API Test Unassigned Task",
+              },
+            },
+          },
+        },
+      },
+      include: {
+        stages: {
+          include: {
+            tasks: true,
+          },
+        },
+      },
+    });
+
+    const taskId = project.stages[0].tasks[0].id;
+
+    await request(app)
+      .patch(`/tasks/${taskId}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "IN_PROGRESS" })
+      .expect(400);
+
+    await request(app)
+      .patch(`/tasks/${taskId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "DONE" })
+      .expect(400);
+  });
+
   it("allows admins to delete users without deleting assigned tasks", async () => {
     const admin = await createTestUser("users-admin", "ADMIN");
     const worker = await createTestUser("users-worker", "WORKER");
@@ -571,6 +638,13 @@ async function loginAs(user: { email: string }) {
     .expect(200);
 
   return response.body.token as string;
+}
+
+function getDateDaysFromNow(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(12, 0, 0, 0);
+  return date;
 }
 
 async function cleanupTestData() {

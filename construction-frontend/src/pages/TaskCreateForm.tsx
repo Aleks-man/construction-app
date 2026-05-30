@@ -1,8 +1,12 @@
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectStage, TaskPriority } from "../api/projects";
 import { getUserDisplayName } from "../utils/user-display";
-import type { TaskDraft } from "./project-details-utils";
+import {
+  getTodayDateInputValue,
+  isValidTaskDueDateInputValue,
+  type TaskDraft,
+} from "./project-details-utils";
 
 export function TaskCreateForm({
   isSubmitting,
@@ -20,8 +24,18 @@ export function TaskCreateForm({
   value: TaskDraft;
 }) {
   const { t } = useTranslation();
+  const [isDueDateTouched, setIsDueDateTouched] = useState(false);
+  const isDueDateValid = isValidTaskDueDateInputValue(value.dueDate);
+  const shouldShowDueDateError = !isDueDateValid && isDueDateTouched;
   const handleSubmit: ComponentProps<"form">["onSubmit"] = (event) => {
     event.preventDefault();
+
+    setIsDueDateTouched(true);
+
+    if (!isDueDateValid) {
+      return;
+    }
+
     onSubmit();
   };
 
@@ -61,10 +75,16 @@ export function TaskCreateForm({
         <label>
           {t("tasks.dueDate")}
           <input
+            aria-invalid={shouldShowDueDateError}
+            min={getTodayDateInputValue()}
+            onBlur={() => setIsDueDateTouched(true)}
             onChange={(event) => onChange({ dueDate: event.target.value })}
             type="date"
             value={value.dueDate}
           />
+          {shouldShowDueDateError ? (
+            <span className="field-error">{t("tasks.dueDateValidation")}</span>
+          ) : null}
         </label>
       </div>
 
@@ -83,7 +103,7 @@ export function TaskCreateForm({
         </select>
       </label>
 
-      <button disabled={isSubmitting || !value.title.trim()} type="submit">
+      <button disabled={isSubmitting || !value.title.trim() || !isDueDateValid} type="submit">
         {isSubmitting ? t("common.creating") : t("tasks.addTask")}
       </button>
     </form>
