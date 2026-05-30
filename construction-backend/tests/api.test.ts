@@ -492,6 +492,39 @@ describe("API", () => {
     expect(deletedAdmin).toBeNull();
     expect(remainingAdmin).not.toBeNull();
   });
+
+  it("prevents deleting the protected demo admin account", async () => {
+    const originalSeedAdminEmail = process.env.SEED_ADMIN_EMAIL;
+    const protectedAdmin = await createTestUser("protected-demo-admin", "ADMIN");
+    const protectedAdminToken = await loginAs(protectedAdmin);
+
+    process.env.SEED_ADMIN_EMAIL = protectedAdmin.email;
+
+    try {
+      await request(app)
+        .patch(`/users/${protectedAdmin.id}`)
+        .set("Authorization", `Bearer ${protectedAdminToken}`)
+        .send({ firstName: "Changed" })
+        .expect(403);
+
+      await request(app)
+        .delete(`/users/${protectedAdmin.id}`)
+        .set("Authorization", `Bearer ${protectedAdminToken}`)
+        .expect(403);
+
+      const remainingAdmin = await prisma.user.findUnique({
+        where: { id: protectedAdmin.id },
+      });
+
+      expect(remainingAdmin).not.toBeNull();
+    } finally {
+      if (originalSeedAdminEmail === undefined) {
+        delete process.env.SEED_ADMIN_EMAIL;
+      } else {
+        process.env.SEED_ADMIN_EMAIL = originalSeedAdminEmail;
+      }
+    }
+  });
 });
 
 const testPassword = "test1234";

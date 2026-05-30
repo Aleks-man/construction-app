@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { getUserDisplayName } from "../utils/user-display";
 
 const roles: UserRole[] = ["ADMIN", "MANAGER", "WORKER"];
+const demoAdminEmail = (import.meta.env.VITE_DEMO_ADMIN_EMAIL || "admin@test.com").toLowerCase();
 
 export function UsersPage() {
   const { logout, user } = useAuth();
@@ -292,6 +293,7 @@ export function UsersPage() {
           <div className="users-list">
             {visibleUsers.map((appUser) => {
               const isCurrentUser = appUser.id === user.id;
+              const isDemoAdmin = appUser.email.toLowerCase() === demoAdminEmail;
               const isProtectedAdmin = appUser.role === "ADMIN" && !isCurrentUser;
 
               return (
@@ -313,8 +315,10 @@ export function UsersPage() {
                     </p>
                   </div>
 
-                  {isProtectedAdmin ? (
-                    <span className="current-user-badge">{t("users.protectedAdmin")}</span>
+                  {isDemoAdmin || isProtectedAdmin ? (
+                    <span className="current-user-badge">
+                      {isDemoAdmin ? t("users.protectedDemoAdmin") : t("users.protectedAdmin")}
+                    </span>
                   ) : (
                     <div className="user-card-actions">
                       {isCurrentUser ? (

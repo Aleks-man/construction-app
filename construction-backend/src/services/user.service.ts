@@ -6,6 +6,7 @@ export const roles = ["ADMIN", "MANAGER", "WORKER"] as const;
 export type Role = (typeof roles)[number];
 
 const passwordSaltRounds = 10;
+const defaultProtectedAdminEmail = "admin@test.com";
 
 export const userService = {
   async createUser(data: UserCreateInput) {
@@ -45,7 +46,11 @@ export const userService = {
     id: number,
     data: UserUpdateInput,
   ) {
-    await this.getUser(id);
+    const user = await this.getUser(id);
+
+    if (isProtectedAdmin(user.email)) {
+      throw forbidden("Demo admin account cannot be modified");
+    }
 
     const updateData: UserUpdateData = {};
 
@@ -83,6 +88,10 @@ export const userService = {
 
   async deleteUser(id: number, currentUser?: { id: number; role: Role }) {
     const user = await this.getUser(id);
+
+    if (isProtectedAdmin(user.email)) {
+      throw forbidden("Demo admin account cannot be deleted");
+    }
 
     if (user.role === "ADMIN" && currentUser?.id !== id) {
       throw forbidden("Admins cannot delete other admin accounts");
@@ -141,4 +150,16 @@ function normalizeOptionalContactField(value: string | null | undefined) {
   const trimmedValue = value.trim();
 
   return trimmedValue || null;
+}
+
+function getProtectedAdminEmail() {
+  return normalizeEmailForComparison(process.env.SEED_ADMIN_EMAIL || defaultProtectedAdminEmail);
+}
+
+function isProtectedAdmin(email: string) {
+  return normalizeEmailForComparison(email) === getProtectedAdminEmail();
+}
+
+function normalizeEmailForComparison(email: string) {
+  return email.trim().toLowerCase();
 }
