@@ -1238,6 +1238,23 @@ select:focus {
   color: #a8071a;
 }
 
+.status-select-control {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 800;
+  max-width: 190px;
+}
+
+.status-select-control select {
+  background: #eef4f3;
+  border-color: #cfe5e1;
+  color: #1f5f5b;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
 .tasks-board {
   display: grid;
   gap: 16px;
@@ -1546,6 +1563,10 @@ select:focus {
   .task-actions .icon-button,
   .stage-actions .icon-button {
     width: 32px;
+  }
+
+  .status-select-control {
+    max-width: none;
   }
 
   .task-card-header {

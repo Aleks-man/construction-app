@@ -65,10 +65,6 @@ export const resources = {
         MEDIUM: "Medium",
         HIGH: "High",
       },
-      statusActions: {
-        IN_PROGRESS: "Start",
-        DONE: "Mark done",
-      },
       state: {
         somethingWrong: "Something went wrong",
       },
@@ -300,10 +296,6 @@ export const resources = {
         LOW: "Низкий",
         MEDIUM: "Средний",
         HIGH: "Высокий",
-      },
-      statusActions: {
-        IN_PROGRESS: "Начать",
-        DONE: "Завершить",
       },
       state: {
         somethingWrong: "Что-то пошло не так",
