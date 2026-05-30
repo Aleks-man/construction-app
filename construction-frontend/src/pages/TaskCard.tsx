@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { Project, ProjectTask, TaskPriority, TaskStatus } from "../api/projects";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { getUserDisplayName } from "../utils/user-display";
 import { formatDate, getNextStatuses } from "./project-details-utils";
 
 export function TaskCard({
@@ -109,7 +110,7 @@ export function TaskCard({
               <option value="">{t("common.unassigned")}</option>
               {members.map((member) => (
                 <option key={member.userId} value={member.userId}>
-                  {member.user.email} ({t(`roles.${member.user.role}`)})
+                  {getUserDisplayName(member.user)} ({t(`roles.${member.user.role}`)})
                 </option>
               ))}
             </select>
@@ -232,5 +233,5 @@ function getAssigneeLabel(task: ProjectTask, members: Project["users"], unassign
 
   const assignee = members.find((member) => member.userId === task.assigneeId);
 
-  return assignee ? assignee.user.email : `User #${task.assigneeId}`;
+  return assignee ? getUserDisplayName(assignee.user) : `User #${task.assigneeId}`;
 }

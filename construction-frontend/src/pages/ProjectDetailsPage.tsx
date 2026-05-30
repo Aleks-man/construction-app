@@ -21,6 +21,7 @@ import { useAuth } from "../auth/auth-context";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PasswordInput } from "../components/PasswordInput";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { getUserDisplayName } from "../utils/user-display";
 import { StageColumn } from "./StageColumn";
 import type { TaskEditDraft } from "./TaskCard";
 import {
@@ -73,7 +74,8 @@ export function ProjectDetailsPage() {
   const canCreateTask = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canManageTasks = user?.role === "ADMIN" || user?.role === "MANAGER";
   const canManageMembers = user?.role === "ADMIN" || user?.role === "MANAGER";
-  const canCreateUsers = user?.role === "ADMIN";
+  const canCreateUsers = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const canSelectNewUserRole = user?.role === "ADMIN";
   const parsedProjectId = useMemo(() => Number(projectId), [projectId]);
 
   useEffect(() => {
@@ -256,8 +258,10 @@ export function ProjectDetailsPage() {
 
     const email = newUserDraft.email.trim();
     const password = newUserDraft.password.trim();
+    const firstName = newUserDraft.firstName.trim();
+    const lastName = newUserDraft.lastName.trim();
 
-    if (!email || !password) {
+    if (!firstName || !lastName || !email || !password) {
       return;
     }
 
@@ -268,7 +272,10 @@ export function ProjectDetailsPage() {
       const createdUser = await createUser({
         email,
         password,
-        role: newUserDraft.role,
+        firstName,
+        lastName,
+        phone: newUserDraft.phone.trim() || null,
+        role: canSelectNewUserRole ? newUserDraft.role : "WORKER",
       });
       setUsers((currentUsers) => [createdUser, ...currentUsers]);
       setSelectedMemberId(String(createdUser.id));
@@ -547,7 +554,9 @@ export function ProjectDetailsPage() {
   const visibleTasks = filterTasks(tasks, taskStatusFilter, taskPriorityFilter);
   const taskSummary = getTaskSummary(tasks);
   const availableUsers = users.filter(
-    (availableUser) => !project.users.some((member) => member.userId === availableUser.id),
+    (availableUser) =>
+      !project.users.some((member) => member.userId === availableUser.id) &&
+      (user?.role === "ADMIN" || availableUser.role === "WORKER"),
   );
 
   return (
@@ -734,7 +743,9 @@ export function ProjectDetailsPage() {
             {activityLogs.slice(0, 8).map((activity) => (
               <article className="activity-item" key={activity.id}>
                 <div>
-                  <strong>{activity.user?.email ?? t("common.system")}</strong>
+                  <strong>
+                    {activity.user ? getUserDisplayName(activity.user) : t("common.system")}
+                  </strong>
                   <p>{activity.message}</p>
                 </div>
                 <time dateTime={activity.createdAt}>
@@ -759,7 +770,17 @@ export function ProjectDetailsPage() {
             {project.users.map((member) => (
               <div className="member-row" key={member.userId}>
                 <div>
-                  <span>{member.user.email}</span>
+                  <details className="contact-details">
+                    <summary>{getUserDisplayName(member.user)}</summary>
+                    <div className="contact-details-body">
+                      <a href={`mailto:${member.user.email}`}>{member.user.email}</a>
+                      {member.user.phone ? (
+                        <a href={`tel:${member.user.phone}`}>{member.user.phone}</a>
+                      ) : (
+                        <span>{t("common.noPhone")}</span>
+                      )}
+                    </div>
+                  </details>
                   <strong>{t(`roles.${member.user.role}`)}</strong>
                 </div>
                 {canManageMembers ? (
@@ -796,7 +817,7 @@ export function ProjectDetailsPage() {
                   </option>
                   {availableUsers.map((availableUser) => (
                     <option key={availableUser.id} value={availableUser.id}>
-                      {availableUser.email} ({t(`roles.${availableUser.role}`)})
+                      {getUserDisplayName(availableUser)} ({t(`roles.${availableUser.role}`)})
                     </option>
                   ))}
                 </select>
@@ -806,9 +827,68 @@ export function ProjectDetailsPage() {
               </button>
             </form>
 
+            <div className="form-section-heading">
+              <h3>
+                {canSelectNewUserRole
+                  ? t("projectDetails.createUserTitle")
+                  : t("projectDetails.createWorkerTitle")}
+              </h3>
+              <p className="muted">
+                {canSelectNewUserRole
+                  ? t("projectDetails.createUserDescription")
+                  : t("projectDetails.createWorkerDescription")}
+              </p>
+            </div>
+
             <form className="member-form member-form-wide" onSubmit={handleCreateUser}>
               <label>
-                {t("projectDetails.newUserEmail")}
+                {t("projectDetails.firstName")}
+                <input
+                  autoComplete="given-name"
+                  onChange={(event) =>
+                    setNewUserDraft((currentDraft) => ({
+                      ...currentDraft,
+                      firstName: event.target.value,
+                    }))
+                  }
+                  placeholder={t("projectDetails.firstNamePlaceholder")}
+                  value={newUserDraft.firstName}
+                />
+              </label>
+
+              <label>
+                {t("projectDetails.lastName")}
+                <input
+                  autoComplete="family-name"
+                  onChange={(event) =>
+                    setNewUserDraft((currentDraft) => ({
+                      ...currentDraft,
+                      lastName: event.target.value,
+                    }))
+                  }
+                  placeholder={t("projectDetails.lastNamePlaceholder")}
+                  value={newUserDraft.lastName}
+                />
+              </label>
+
+              <label>
+                {t("projectDetails.phone")}
+                <input
+                  autoComplete="tel"
+                  onChange={(event) =>
+                    setNewUserDraft((currentDraft) => ({
+                      ...currentDraft,
+                      phone: event.target.value,
+                    }))
+                  }
+                  placeholder={t("projectDetails.phonePlaceholder")}
+                  type="tel"
+                  value={newUserDraft.phone}
+                />
+              </label>
+
+              <label>
+                {t("projectDetails.email")}
                 <input
                   onChange={(event) =>
                     setNewUserDraft((currentDraft) => ({
@@ -816,7 +896,7 @@ export function ProjectDetailsPage() {
                       email: event.target.value,
                     }))
                   }
-                  placeholder={t("projectDetails.newUserEmailPlaceholder")}
+                  placeholder={t("projectDetails.emailPlaceholder")}
                   type="email"
                   value={newUserDraft.email}
                 />
@@ -837,26 +917,30 @@ export function ProjectDetailsPage() {
                 />
               </label>
 
-              <label>
-                {t("projectDetails.role")}
-                <select
-                  onChange={(event) =>
-                    setNewUserDraft((currentDraft) => ({
-                      ...currentDraft,
-                      role: event.target.value as UserRole,
-                    }))
-                  }
-                  value={newUserDraft.role}
-                >
-                  <option value="WORKER">{t("roles.WORKER")}</option>
-                  <option value="MANAGER">{t("roles.MANAGER")}</option>
-                  <option value="ADMIN">{t("roles.ADMIN")}</option>
-                </select>
-              </label>
+              {canSelectNewUserRole ? (
+                <label>
+                  {t("projectDetails.role")}
+                  <select
+                    onChange={(event) =>
+                      setNewUserDraft((currentDraft) => ({
+                        ...currentDraft,
+                        role: event.target.value as UserRole,
+                      }))
+                    }
+                    value={newUserDraft.role}
+                  >
+                    <option value="WORKER">{t("roles.WORKER")}</option>
+                    <option value="MANAGER">{t("roles.MANAGER")}</option>
+                    <option value="ADMIN">{t("roles.ADMIN")}</option>
+                  </select>
+                </label>
+              ) : null}
 
               <button
                 disabled={
                   isCreatingUser ||
+                  !newUserDraft.firstName.trim() ||
+                  !newUserDraft.lastName.trim() ||
                   !newUserDraft.email.trim() ||
                   newUserDraft.password.trim().length < 6
                 }
@@ -945,6 +1029,9 @@ export function ProjectDetailsPage() {
 type UserDraft = {
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   role: UserRole;
 };
 
@@ -976,6 +1063,9 @@ function createEmptyUserDraft(): UserDraft {
   return {
     email: "",
     password: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
     role: "WORKER",
   };
 }

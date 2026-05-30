@@ -5,6 +5,9 @@ export type UserRole = "ADMIN" | "MANAGER" | "WORKER";
 export type AppUser = {
   id: number;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
   role: UserRole;
   createdAt: string;
 };
@@ -13,7 +16,14 @@ export function getUsers() {
   return apiRequest<AppUser[]>("/users");
 }
 
-export function createUser(data: { email: string; password: string; role: UserRole }) {
+export function createUser(data: {
+  email: string;
+  password: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  role: UserRole;
+}) {
   return apiRequest<AppUser>("/users", {
     method: "POST",
     body: data,

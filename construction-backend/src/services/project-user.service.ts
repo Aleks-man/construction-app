@@ -1,4 +1,4 @@
-import { conflict, notFound } from "../errors/http-error";
+import { conflict, forbidden, notFound } from "../errors/http-error";
 import { projectRepository } from "../repositories/project.repository";
 import { projectUserRepository } from "../repositories/project-user.repository";
 import { userRepository } from "../repositories/user.repository";
@@ -10,7 +10,11 @@ export const projectUserService = {
   },
 
   async addUserToProject(projectId: number, userId: number, actor?: ActivityActor) {
-    await ensureProjectAndUserExist(projectId, userId);
+    const user = await ensureProjectAndUserExist(projectId, userId);
+
+    if (actor?.role === "MANAGER" && user.role !== "WORKER") {
+      throw forbidden("Managers can add only worker users to projects");
+    }
 
     const existing = await projectUserRepository.findByIds(projectId, userId);
 
@@ -67,4 +71,6 @@ async function ensureProjectAndUserExist(projectId: number, userId: number) {
   if (!user) {
     throw notFound("User not found");
   }
+
+  return user;
 }

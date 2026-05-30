@@ -96,6 +96,90 @@ describe("API", () => {
     });
   });
 
+  it("creates users with contact details", async () => {
+    const adminToken = await loginAs(await createTestUser("contact-admin", "ADMIN"));
+
+    const createUserResponse = await request(app)
+      .post("/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        email: `contact-worker-${Date.now()}${testEmailDomain}`,
+        password: testPassword,
+        firstName: "Alex",
+        lastName: "Worker",
+        phone: "+1 555 0100",
+        role: "WORKER",
+      })
+      .expect(201);
+
+    expect(createUserResponse.body).toMatchObject({
+      email: expect.stringMatching(testEmailDomain),
+      firstName: "Alex",
+      lastName: "Worker",
+      phone: "+1 555 0100",
+      role: "WORKER",
+    });
+    expect(createUserResponse.body.password).toBeUndefined();
+  });
+
+  it("allows managers to create only worker users", async () => {
+    const managerToken = await loginAs(await createTestUser("contact-manager", "MANAGER"));
+
+    await request(app)
+      .post("/users")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        email: `manager-created-worker-${Date.now()}${testEmailDomain}`,
+        password: testPassword,
+        firstName: "Managed",
+        lastName: "Worker",
+        role: "WORKER",
+      })
+      .expect(201);
+
+    await request(app)
+      .post("/users")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        email: `manager-created-manager-${Date.now()}${testEmailDomain}`,
+        password: testPassword,
+        firstName: "Wrong",
+        lastName: "Role",
+        role: "MANAGER",
+      })
+      .expect(403);
+  });
+
+  it("allows managers to add only worker users to projects", async () => {
+    const admin = await createTestUser("project-member-admin", "ADMIN");
+    const manager = await createTestUser("project-member-manager", "MANAGER");
+    const worker = await createTestUser("project-member-worker", "WORKER");
+    const managerToken = await loginAs(manager);
+
+    const project = await prisma.project.create({
+      data: {
+        name: "API Test Manager Member Permissions",
+        users: {
+          create: {
+            userId: manager.id,
+          },
+        },
+      },
+    });
+
+    await request(app)
+      .post("/project-users")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({ projectId: project.id, userId: worker.id })
+      .expect(201);
+
+    await request(app)
+      .post("/project-users")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({ projectId: project.id, userId: admin.id })
+      .expect(403);
+  });
+
   it("allows assigned workers to update only their own task status", async () => {
     const adminToken = await loginAs(await createTestUser("task-admin", "ADMIN"));
     const assignedWorker = await createTestUser("assigned-worker", "WORKER");

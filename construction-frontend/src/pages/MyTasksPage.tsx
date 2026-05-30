@@ -6,6 +6,7 @@ import { getTasks, updateTaskStatus, type TaskWithDetails } from "../api/tasks";
 import type { TaskPriority, TaskStatus } from "../api/projects";
 import { useAuth } from "../auth/auth-context";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
+import { getUserDisplayName } from "../utils/user-display";
 import {
   canUpdateTaskStatus,
   formatDate,
@@ -189,7 +190,9 @@ export function MyTasksPage() {
                     <span>
                       {task.dueDate ? formatDate(task.dueDate, i18n.language) : t("tasks.noDueDate")}
                     </span>
-                    <span>{task.assignee ? task.assignee.email : t("common.unassigned")}</span>
+                    <span>
+                      {task.assignee ? getUserDisplayName(task.assignee) : t("common.unassigned")}
+                    </span>
                   </div>
                 </div>
 

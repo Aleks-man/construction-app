@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { userService, roles } from "../services/user.service";
 import {
   optionalEnum,
+  optionalNullableString,
   optionalString,
   parsePositiveInt,
   requireEnum,
@@ -14,7 +15,11 @@ export const userController = {
       const user = await userService.createUser({
         email: requireString(req.body.email, "email"),
         password: requireString(req.body.password, "password"),
+        firstName: optionalNullableString(req.body.firstName, "firstName"),
+        lastName: optionalNullableString(req.body.lastName, "lastName"),
+        phone: optionalNullableString(req.body.phone, "phone"),
         role: requireEnum(req.body.role, roles, "role"),
+        currentUserRole: req.user?.role,
       });
 
       res.status(201).json(user);
@@ -48,6 +53,9 @@ export const userController = {
       const user = await userService.updateUser(userId, {
         email: optionalString(req.body.email, "email"),
         password: optionalString(req.body.password, "password"),
+        firstName: optionalNullableString(req.body.firstName, "firstName"),
+        lastName: optionalNullableString(req.body.lastName, "lastName"),
+        phone: optionalNullableString(req.body.phone, "phone"),
         role: optionalEnum(req.body.role, roles, "role"),
       });
 
